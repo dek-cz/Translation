@@ -1,5 +1,5 @@
 language: php
-
+dist: bionic
 sudo: false
 
 cache:
@@ -9,9 +9,6 @@ cache:
 php:
   - 7.4
   - 8.0
-
-dist:
-  - trusty
 
 env:
   - DEV=1
