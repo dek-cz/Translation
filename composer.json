@@ -1,5 +1,5 @@
 {
-	"name": "kdyby/translation",
+	"name": "dek-cz/translation",
 	"type": "library",
 	"description": "Integration of Symfony/Translation into Nette Framework",
 	"keywords": ["nette", "kdyby", "translation"],
@@ -17,7 +17,7 @@
 		"issues": "https://github.com/kdyby/translation/issues"
 	},
 	"require": {
-		"php": ">=7.1",
+		"php": ">=7.4",
 		"kdyby/strict-objects": "^2.0",
 		"latte/latte": "^2.5.2 || ^3.0",
 		"nette/caching": "^3.0",
