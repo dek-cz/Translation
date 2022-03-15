@@ -10,7 +10,7 @@
 
 namespace KdybyTests\Translation;
 
-use Kdyby\Console\DI\ConsoleExtension;
+use Contributte\Console\DI\ConsoleExtension;
 use Kdyby\Monolog\DI\MonologExtension;
 use Kdyby\Translation\DI\TranslationExtension;
 use Nette\Configurator;
@@ -32,7 +32,7 @@ abstract class TestCase extends \Tester\TestCase
 		TranslationExtension::register($config);
 		MonologExtension::register($config);
 		$config->onCompile[] = function ($config, Compiler $compiler): void {
-			$compiler->addExtension('console', new ConsoleExtension());
+			$compiler->addExtension('console', new ConsoleExtension(true));
 		};
 		$config->addConfig(__DIR__ . '/../nette-reset.neon');
 

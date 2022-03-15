@@ -21,109 +21,111 @@ use Symfony\Component\Translation\Writer\TranslationWriter;
 class ExtractCommand extends \Symfony\Component\Console\Command\Command
 {
 
-	use \Kdyby\StrictObjects\Scream;
+    use \Nette\SmartObject;
 
-	/**
-	 * @var string
-	 */
-	public $defaultOutputDir = '%appDir%/lang';
+    protected static $defaultName = 'kdyby:translation-extract';
 
-	/**
-	 * @var \Symfony\Component\Translation\Writer\TranslationWriter
-	 */
-	private $writer;
+    /**
+     * @var string
+     */
+    public $defaultOutputDir = '%appDir%/lang';
 
-	/**
-	 * @var \Symfony\Component\Translation\Extractor\ChainExtractor
-	 */
-	private $extractor;
+    /**
+     * @var \Symfony\Component\Translation\Writer\TranslationWriter
+     */
+    private $writer;
 
-	/**
-	 * @var \Nette\DI\Container
-	 */
-	private $serviceLocator;
+    /**
+     * @var \Symfony\Component\Translation\Extractor\ChainExtractor
+     */
+    private $extractor;
 
-	/**
-	 * @var string
-	 */
-	private $outputFormat;
+    /**
+     * @var \Nette\DI\Container
+     */
+    private $serviceLocator;
 
-	/**
-	 * @var array
-	 */
-	private $scanDirs;
+    /**
+     * @var string
+     */
+    private $outputFormat;
 
-	/**
-	 * @var string
-	 */
-	private $outputDir;
+    /**
+     * @var array
+     */
+    private $scanDirs;
 
-	protected function configure()
-	{
-		$this->setName('kdyby:translation-extract')
-			->setDescription('Extracts strings from application to translation files')
-			->addOption('scan-dir', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'The directory to parse the translations. Can contain %placeholders%.', ['%appDir%'])
-			->addOption('output-format', 'f', InputOption::VALUE_REQUIRED, 'Format name of the messages.')
-			->addOption('output-dir', 'o', InputOption::VALUE_OPTIONAL, 'Directory to write the messages to. Can contain %placeholders%.', $this->defaultOutputDir)
-			->addOption('catalogue-language', 'l', InputOption::VALUE_OPTIONAL, 'The language of the catalogue', 'en_US');
-	}
+    /**
+     * @var string
+     */
+    private $outputDir;
 
-	protected function initialize(InputInterface $input, OutputInterface $output)
-	{
-		$this->writer = $this->getHelper('container')->getByType(TranslationWriter::class);
-		$this->extractor = $this->getHelper('container')->getByType(ChainExtractor::class);
-		$this->serviceLocator = $this->getHelper('container')->getContainer();
-	}
+    protected function configure()
+    {
+        $this->setName('kdyby:translation-extract')
+            ->setDescription('Extracts strings from application to translation files')
+            ->addOption('scan-dir', 'd', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'The directory to parse the translations. Can contain %placeholders%.', ['%appDir%'])
+            ->addOption('output-format', 'f', InputOption::VALUE_REQUIRED, 'Format name of the messages.')
+            ->addOption('output-dir', 'o', InputOption::VALUE_OPTIONAL, 'Directory to write the messages to. Can contain %placeholders%.', $this->defaultOutputDir)
+            ->addOption('catalogue-language', 'l', InputOption::VALUE_OPTIONAL, 'The language of the catalogue', 'en_US');
+    }
 
-	protected function validate(InputInterface $input, OutputInterface $output)
-	{
-		$this->outputFormat = trim($input->getOption('output-format'), '=');
-		if (!in_array($this->outputFormat, $this->writer->getFormats(), TRUE)) {
-			$output->writeln('<error>Unknown --output-format</error>');
-			$output->writeln(sprintf('<info>Choose one of: %s</info>', implode(', ', $this->writer->getFormats())));
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $this->writer = $this->getHelper('container')->getByType(TranslationWriter::class);
+        $this->extractor = $this->getHelper('container')->getByType(ChainExtractor::class);
+        $this->serviceLocator = $this->getHelper('container')->getContainer();
+    }
 
-			return FALSE;
-		}
+    protected function validate(InputInterface $input, OutputInterface $output)
+    {
+        $this->outputFormat = trim($input->getOption('output-format'), '=');
+        if (!in_array($this->outputFormat, $this->writer->getFormats(), TRUE)) {
+            $output->writeln('<error>Unknown --output-format</error>');
+            $output->writeln(sprintf('<info>Choose one of: %s</info>', implode(', ', $this->writer->getFormats())));
 
-		$this->scanDirs = Helpers::expand($input->getOption('scan-dir'), $this->serviceLocator->parameters);
-		foreach ($this->scanDirs as $dir) {
-			if (!is_dir($dir)) {
-				$output->writeln(sprintf('<error>Given --scan-dir "%s" does not exists.</error>', $dir));
+            return FALSE;
+        }
 
-				return FALSE;
-			}
-		}
+        $this->scanDirs = Helpers::expand($input->getOption('scan-dir'), $this->serviceLocator->parameters);
+        foreach ($this->scanDirs as $dir) {
+            if (!is_dir($dir)) {
+                $output->writeln(sprintf('<error>Given --scan-dir "%s" does not exists.</error>', $dir));
 
-		$this->outputDir = Helpers::expand($input->getOption('output-dir'), $this->serviceLocator->parameters);
-		if (!is_dir($this->outputDir) || !is_writable($this->outputDir)) {
-			$output->writeln(sprintf('<error>Given --output-dir "%s" does not exists or is not writable.</error>', $this->outputDir));
+                return FALSE;
+            }
+        }
 
-			return FALSE;
-		}
+        $this->outputDir = Helpers::expand($input->getOption('output-dir'), $this->serviceLocator->parameters);
+        if (!is_dir($this->outputDir) || !is_writable($this->outputDir)) {
+            $output->writeln(sprintf('<error>Given --output-dir "%s" does not exists or is not writable.</error>', $this->outputDir));
 
-		return TRUE;
-	}
+            return FALSE;
+        }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-		if ($this->validate($input, $output) !== TRUE) {
-			return 1;
-		}
+        return TRUE;
+    }
 
-		$catalogue = new MessageCatalogue((string) $input->getOption('catalogue-language'));
-		foreach ($this->scanDirs as $dir) {
-			$output->writeln(sprintf('<info>Extracting %s</info>', $dir));
-			$this->extractor->extract($dir, $catalogue);
-		}
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        if ($this->validate($input, $output) !== TRUE) {
+            return 1;
+        }
 
-		$this->writer->write($catalogue, $this->outputFormat, [
-			'path' => $this->outputDir,
-		]);
+        $catalogue = new MessageCatalogue((string) $input->getOption('catalogue-language'));
+        foreach ($this->scanDirs as $dir) {
+            $output->writeln(sprintf('<info>Extracting %s</info>', $dir));
+            $this->extractor->extract($dir, $catalogue);
+        }
 
-		$output->writeln('');
-		$output->writeln(sprintf('<info>Catalogue was written to %s</info>', $this->outputDir));
+        $this->writer->write($catalogue, $this->outputFormat, [
+            'path' => $this->outputDir,
+        ]);
 
-		return 0;
-	}
+        $output->writeln('');
+        $output->writeln(sprintf('<info>Catalogue was written to %s</info>', $this->outputDir));
+
+        return 0;
+    }
 
 }

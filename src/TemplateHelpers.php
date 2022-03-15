@@ -16,7 +16,7 @@ use Latte\Runtime\FilterInfo;
 class TemplateHelpers
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * @var \Kdyby\Translation\ITranslator|\Kdyby\Translation\Translator|\Kdyby\Translation\PrefixedTranslator

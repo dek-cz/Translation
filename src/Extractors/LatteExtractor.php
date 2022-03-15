@@ -19,7 +19,7 @@ use Symfony\Component\Translation\MessageCatalogue;
 class LatteExtractor implements \Symfony\Component\Translation\Extractor\ExtractorInterface
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * @var string

@@ -19,7 +19,7 @@ use Symfony\Component\Translation\MessageCatalogue;
 class NeonFileDumper extends \Symfony\Component\Translation\Dumper\FileDumper
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * {@inheritDoc}

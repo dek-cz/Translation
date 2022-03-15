@@ -28,7 +28,7 @@ use Nette\Http\Session;
 class SessionResolver implements \Kdyby\Translation\IUserLocaleResolver
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * @var \Nette\Http\SessionSection|\stdClass

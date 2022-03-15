@@ -17,7 +17,7 @@ use Nette\Application\Request;
 class LocaleParamResolver implements \Kdyby\Translation\IUserLocaleResolver
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * @var \Nette\Application\Request

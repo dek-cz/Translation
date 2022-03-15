@@ -16,7 +16,7 @@ namespace Kdyby\Translation;
 class Phrase
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * @var string

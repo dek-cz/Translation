@@ -21,7 +21,7 @@ use Symfony\Component\Translation\MessageCatalogue;
 class TranslationLoader implements \Kdyby\Translation\IResourceLoader
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * Loaders used for import.

@@ -25,7 +25,7 @@ use Tracy\Helpers;
 class Panel implements \Tracy\IBarPanel
 {
 
-	use \Kdyby\StrictObjects\Scream;
+	use \Nette\SmartObject;
 
 	/**
 	 * @var \Kdyby\Translation\Translator
