@@ -10,6 +10,9 @@ php:
   - 7.4
   - 8.0
 
+dist:
+  - trusty
+
 env:
   - DEV=1
   - COMPOSER_EXTRA_ARGS="--prefer-stable"
