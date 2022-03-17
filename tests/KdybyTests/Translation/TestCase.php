@@ -11,7 +11,7 @@
 namespace KdybyTests\Translation;
 
 use Contributte\Console\DI\ConsoleExtension;
-use Kdyby\Monolog\DI\MonologExtension;
+use Contributte\Monolog\DI\MonologExtension;
 use Kdyby\Translation\DI\TranslationExtension;
 use Nette\Configurator;
 use Nette\DI\Compiler;
@@ -20,40 +20,49 @@ use Nette\Localization\ITranslator;
 abstract class TestCase extends \Tester\TestCase
 {
 
-	/**
-	 * @param string|NULL $configName
-	 * @return \Nette\DI\Container
-	 */
-	protected function createContainer($configName = NULL)
-	{
-		$config = new Configurator();
-		$config->setTempDirectory(TEMP_DIR);
-		$config->addParameters(['appDir' => __DIR__]);
-		TranslationExtension::register($config);
-		MonologExtension::register($config);
-		$config->onCompile[] = function ($config, Compiler $compiler): void {
-			$compiler->addExtension('console', new ConsoleExtension(true));
-		};
-		$config->addConfig(__DIR__ . '/../nette-reset.neon');
+    /**
+     * @param string|NULL $configName
+     * @return \Nette\DI\Container
+     */
+    protected function createContainer($configName = NULL)
+    {
+        $config = new Configurator();
+        $config->setTempDirectory(TEMP_DIR);
+        $config->addParameters(['appDir' => __DIR__]);
+        TranslationExtension::register($config);
+        $config->onCompile[] = function ($config, Compiler $compiler): void
+        {
+            $compiler->addExtension('monolog', new MonologExtension());
+        };
+        $config->onCompile[] = function ($config, Compiler $compiler): void
+        {
+            $compiler->addExtension('console', new ConsoleExtension(true));
+        };
+        $config->addConfig(__DIR__ . '/../nette-reset.neon');
 
-		if ($configName) {
-			$config->addConfig(__DIR__ . '/config/' . $configName . '.neon');
-		}
+        if ($configName) {
+            $config->addConfig(__DIR__ . '/config/' . $configName . '.neon');
+        }
+//        try{
+//            $config->createContainer();
+//        } catch (\Exception $ex) {
+//            var_dump($ex->getMessage());
+//            exit;
+//        }
+        return $config->createContainer();
+    }
 
-		return $config->createContainer();
-	}
-
-	/**
-	 * @param string|NULL $configName
-	 * @return \Kdyby\Translation\Translator
-	 */
-	protected function createTranslator($configName = NULL)
-	{
-		$container = $this->createContainer($configName);
-		/** @var \Kdyby\Translation\Translator $translator */
-		$translator = $container->getByType(ITranslator::class);
-		// type hacking
-		return $translator;
-	}
+    /**
+     * @param string|NULL $configName
+     * @return \Kdyby\Translation\Translator
+     */
+    protected function createTranslator($configName = NULL)
+    {
+        $container = $this->createContainer($configName);
+        /** @var \Kdyby\Translation\Translator $translator */
+        $translator = $container->getByType(ITranslator::class);
+        // type hacking
+        return $translator;
+    }
 
 }

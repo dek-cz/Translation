@@ -20,3 +20,11 @@ http:
 
 session:
 	autoStart: false
+
+monolog:
+	channel:
+		default: # default channel is required
+			handlers:
+				- Monolog\Handler\TestHandler
+	holder:
+		enabled: true

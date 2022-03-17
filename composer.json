@@ -32,18 +32,17 @@
 		"symfony/config": "^3.4 || ^4.0"
 	},
 	"suggest": {
-		"kdyby/monolog": "Integration of Monolog into Nette Framework.",
 		"tracy/tracy": "Diagnostics tool from Nette",
 		"symfony/locale": "Locale component provides fallback code to handle cases when the intl extension is missing.",
 		"symfony/yaml": "If you wanna store translations in YAML format - supports multiline strings."
 	},
 	"require-dev": {
-		"nette/application": "^3.0",
-		"nette/bootstrap": "^3.0",
-		"nette/forms": "^3.0",
+		"nette/application": "^3.1",
+		"nette/bootstrap": "^3.1",
+		"nette/forms": "^3.1",
 		"tracy/tracy": "^2.8 || ^3.0",
 		"contributte/console": "^0.10.x-dev",
-		"kdyby/monolog": "^2.0",
+		"contributte/monolog": "^0.5",
 		"symfony/yaml": "^3.4 || ^4.0",
 		"symfony/console": "^3.4 || ^4.0",
 		"nette/tester": "^2.4",

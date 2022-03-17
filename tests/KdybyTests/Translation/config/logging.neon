@@ -1,2 +1,5 @@
-translation:
-	logging: translation
+monolog:
+	channel:
+		translation:
+			handlers:
+				- Monolog\Handler\TestHandler

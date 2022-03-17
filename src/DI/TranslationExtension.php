@@ -12,7 +12,7 @@ namespace Kdyby\Translation\DI;
 
 use Closure;
 use Contributte\Console\DI\ConsoleExtension;
-use Kdyby\Monolog\Logger as KdybyLogger;
+use Monolog\Logger as KdybyLogger;
 use Kdyby\Translation\Caching\PhpFileStorage;
 use Kdyby\Translation\CatalogueCompiler;
 use Kdyby\Translation\CatalogueFactory;
@@ -287,8 +287,6 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         /** @var array $config */
         $config = $this->config;
 
-        $this->beforeCompileLogging($config);
-
         $registerToLatte = function (FactoryDefinition $def)
         {
             $def->getResultDefinition()->addSetup('?->onCompile[] = function($engine) { ?::install($engine->getCompiler()); }', ['@self', new PhpLiteral(TranslateMacros::class)]);
@@ -381,26 +379,6 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
             }
 
             $this->loadResourcesFromDirs($dirs);
-        }
-    }
-
-    protected function beforeCompileLogging(array $config)
-    {
-        $builder = $this->getContainerBuilder();
-        /** @var \Nette\DI\Definitions\ServiceDefinition $translator */
-        $translator = $builder->getDefinition($this->prefix('default'));
-
-        if ($config['logging'] === TRUE) {
-            $translator->addSetup('injectPsrLogger');
-        } elseif (is_string($config['logging'])) { // channel for kdyby/monolog
-            $translator->addSetup('injectPsrLogger', [
-                new Statement(sprintf('@%s::channel', KdybyLogger::class), [$config['logging']]),
-            ]);
-        } elseif ($config['logging'] !== NULL) {
-            throw new \Kdyby\Translation\InvalidArgumentException(sprintf(
-                        'Invalid config option for logger. Valid are TRUE for general psr/log or string for kdyby/monolog channel, but %s was given',
-                        $config['logging']
-            ));
         }
     }
 
