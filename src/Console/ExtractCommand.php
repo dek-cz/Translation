@@ -51,7 +51,7 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
     private $outputFormat;
 
     /**
-     * @var array
+     * @var array<mixed>
      */
     private $scanDirs;
 
@@ -60,7 +60,7 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
      */
     private $outputDir;
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('kdyby:translation-extract')
             ->setDescription('Extracts strings from application to translation files')
@@ -70,33 +70,46 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
             ->addOption('catalogue-language', 'l', InputOption::VALUE_OPTIONAL, 'The language of the catalogue', 'en_US');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->writer = $this->getHelper('container')->getByType(TranslationWriter::class);
-        $this->extractor = $this->getHelper('container')->getByType(ChainExtractor::class);
-        $this->serviceLocator = $this->getHelper('container')->getContainer();
+        /** @var \Nette\DI\Container $container */
+        $container = $this->getHelper('container');
+        $this->writer = $container->getByType(TranslationWriter::class);
+        $this->extractor = $container->getByType(ChainExtractor::class);
+        $this->serviceLocator = $container;
     }
 
-    protected function validate(InputInterface $input, OutputInterface $output)
+    /**
+     * 
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return bool
+     */
+    protected function validate(InputInterface $input, OutputInterface $output): bool
     {
-        $this->outputFormat = trim($input->getOption('output-format'), '=');
+        /** @var string $of */
+        $of = $input->getOption('output-format') ?: '';
+        $this->outputFormat = trim($of, '=');
         if (!in_array($this->outputFormat, $this->writer->getFormats(), TRUE)) {
             $output->writeln('<error>Unknown --output-format</error>');
             $output->writeln(sprintf('<info>Choose one of: %s</info>', implode(', ', $this->writer->getFormats())));
 
             return FALSE;
         }
-
-        $this->scanDirs = Helpers::expand($input->getOption('scan-dir'), $this->serviceLocator->parameters);
+        /** @var string $sdir */
+        $sdir = $input->getOption('scan-dir') ?: '';
+        $this->scanDirs = (array) Helpers::expand($sdir, $this->serviceLocator->parameters);
         foreach ($this->scanDirs as $dir) {
-            if (!is_dir($dir)) {
-                $output->writeln(sprintf('<error>Given --scan-dir "%s" does not exists.</error>', $dir));
+            if (!is_dir(is_string($dir) ? $dir : '')) {
+                $output->writeln(sprintf('<error>Given --scan-dir "%s" does not exists.</error>', is_string($dir) ? $dir : ''));
 
                 return FALSE;
             }
         }
-
-        $this->outputDir = Helpers::expand($input->getOption('output-dir'), $this->serviceLocator->parameters);
+        /** @var string $odir */
+        $odir = $input->getOption('output-dir') ?: '';
+        $tmp = Helpers::expand($odir, $this->serviceLocator->parameters);
+        $this->outputDir = is_string($tmp) ? $tmp : '';
         if (!is_dir($this->outputDir) || !is_writable($this->outputDir)) {
             $output->writeln(sprintf('<error>Given --output-dir "%s" does not exists or is not writable.</error>', $this->outputDir));
 
@@ -111,11 +124,11 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
         if ($this->validate($input, $output) !== TRUE) {
             return 1;
         }
-
-        $catalogue = new MessageCatalogue((string) $input->getOption('catalogue-language'));
+        $cl = $input->getOption('catalogue-language');
+        $catalogue = new MessageCatalogue(is_string($cl) ? $cl : '');
         foreach ($this->scanDirs as $dir) {
-            $output->writeln(sprintf('<info>Extracting %s</info>', $dir));
-            $this->extractor->extract($dir, $catalogue);
+            $output->writeln(sprintf('<info>Extracting %s</info>', is_string($dir) ? $dir : ''));
+            $this->extractor->extract(is_string($dir) ? $dir : '', $catalogue);
         }
 
         $this->writer->write($catalogue, $this->outputFormat, [

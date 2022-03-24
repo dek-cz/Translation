@@ -28,66 +28,67 @@ use Nette\Http\Session;
 class SessionResolver implements \Kdyby\Translation\IUserLocaleResolver
 {
 
-	use \Nette\SmartObject;
+    use \Nette\SmartObject;
 
-	/**
-	 * @var \Nette\Http\SessionSection|\stdClass
-	 */
-	private $localeSession;
+    /**
+     * @var \Nette\Http\SessionSection|\stdClass
+     */
+    private $localeSession;
 
-	/**
-	 * @var \Nette\Http\IResponse
-	 */
-	private $httpResponse;
+    /**
+     * @var \Nette\Http\IResponse
+     */
+    private $httpResponse;
 
-	/**
-	 * @var \Nette\Http\Session
-	 */
-	private $session;
+    /**
+     * @var \Nette\Http\Session
+     */
+    private $session;
 
-	public function __construct(Session $session, IResponse $httpResponse)
-	{
-		$this->localeSession = $session->getSection(get_class($this));
-		$this->httpResponse = $httpResponse;
-		$this->session = $session;
-	}
+    public function __construct(Session $session, IResponse $httpResponse)
+    {
+        $this->localeSession = $session->getSection(get_class($this));
+        $this->httpResponse = $httpResponse;
+        $this->session = $session;
+    }
 
-	/**
-	 * @param string $locale
-	 */
-	public function setLocale($locale = NULL)
-	{
-		$this->localeSession->locale = $locale;
-	}
+    /**
+     * @param string $locale
+     */
+    public function setLocale($locale = NULL): void
+    {
+        $this->localeSession->locale = $locale;
+    }
 
-	/**
-	 * @param \Kdyby\Translation\Translator $translator
-	 * @return string|NULL
-	 */
-	public function resolve(Translator $translator)
-	{
-		if (!$this->session->isStarted() && $this->httpResponse->isSent()) {
-			trigger_error(
-				'The advice of session locale resolver is required but the session has not been started and headers had been already sent. ' .
-				'Either start your sessions earlier or disabled the SessionResolver.',
-				E_USER_WARNING
-			);
-			return NULL;
-		}
+    /**
+     * @param \Kdyby\Translation\Translator $translator
+     * @return string|NULL
+     */
+    public function resolve(Translator $translator)
+    {
+        if (!$this->session->isStarted() && $this->httpResponse->isSent()) {
+            trigger_error(
+                'The advice of session locale resolver is required but the session has not been started and headers had been already sent. ' .
+                'Either start your sessions earlier or disabled the SessionResolver.',
+                E_USER_WARNING
+            );
+            return NULL;
+        }
 
-		if (empty($this->localeSession->locale)) {
-			return NULL;
-		}
+        if (empty($this->localeSession->locale)) {
+            return NULL;
+        }
 
-		$short = array_map(function ($locale) {
-			return substr($locale, 0, 2);
-		}, $translator->getAvailableLocales());
+        $short = array_map(function ($locale)
+        {
+            return substr($locale, 0, 2);
+        }, $translator->getAvailableLocales());
 
-		if (!in_array(substr($this->localeSession->locale, 0, 2), $short, TRUE)) {
-			return NULL;
-		}
+        if (!in_array(substr($this->localeSession->locale, 0, 2), $short, TRUE)) {
+            return NULL;
+        }
 
-		return $this->localeSession->locale;
-	}
+        return $this->localeSession->locale;
+    }
 
 }

@@ -16,26 +16,26 @@ use Symfony\Component\Translation\MessageCatalogue;
 interface IResourceLoader
 {
 
-	/**
-	 * Adds a loader to the translation extractor.
-	 *
-	 * @param string $format The format of the loader
-	 * @param \Symfony\Component\Translation\Loader\LoaderInterface $loader
-	 */
-	public function addLoader($format, LoaderInterface $loader);
+    /**
+     * Adds a loader to the translation extractor.
+     *
+     * @param string $format The format of the loader
+     * @param \Symfony\Component\Translation\Loader\LoaderInterface $loader
+     */
+    public function addLoader($format, LoaderInterface $loader): void;
 
-	/**
-	 * @return \Symfony\Component\Translation\Loader\LoaderInterface[]
-	 */
-	public function getLoaders();
+    /**
+     * @return array<\Symfony\Component\Translation\Loader\LoaderInterface>
+     */
+    public function getLoaders(): array;
 
-	/**
-	 * @param string $format
-	 * @param string $resource
-	 * @param string $domain
-	 * @param \Symfony\Component\Translation\MessageCatalogue $catalogue
-	 * @throws \Kdyby\Translation\LoaderNotFoundException
-	 */
-	public function loadResource($format, $resource, $domain, MessageCatalogue $catalogue);
+    /**
+     * @param string $format
+     * @param string $resource
+     * @param string $domain
+     * @param \Symfony\Component\Translation\MessageCatalogue $catalogue
+     * @throws \Kdyby\Translation\LoaderNotFoundException
+     */
+    public function loadResource($format, $resource, $domain, MessageCatalogue $catalogue): void;
 
 }

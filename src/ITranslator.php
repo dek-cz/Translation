@@ -15,7 +15,6 @@ namespace Kdyby\Translation;
  */
 interface ITranslator extends \Nette\Localization\ITranslator
 {
-
-	// function translate($message, ...$parameters);
+    // function translate($message, ...$parameters);
 
 }

@@ -18,47 +18,47 @@ use Nette\Caching\Cache;
 class PhpFileStorage extends \Nette\Caching\Storages\FileStorage implements \Nette\Caching\IStorage
 {
 
-	/**
-	 * @var string
-	 */
-	public $hint;
+    /**
+     * @var string
+     */
+    public $hint;
 
-	/**
-	 * Additional cache structure
-	 */
-	private const FILE = 'file';
-	private const HANDLE = 'handle';
+    /**
+     * Additional cache structure
+     */
+    private const FILE = 'file';
+    private const HANDLE = 'handle';
 
-	/**
-	 * Reads cache data from disk.
-	 *
-	 * @param array $meta
-	 * @return mixed
-	 */
-	protected function readData(array $meta)
-	{
-		return [
-			'file' => $meta[self::FILE],
-			'handle' => $meta[self::HANDLE],
-		];
-	}
+    /**
+     * Reads cache data from disk.
+     *
+     * @param array<string,string> $meta
+     * @return array<string,string>
+     */
+    protected function readData(array $meta): array
+    {
+        return [
+            'file' => $meta[self::FILE],
+            'handle' => $meta[self::HANDLE],
+        ];
+    }
 
-	/**
-	 * Returns file name.
-	 *
-	 * @param string $key
-	 * @return string
-	 */
-	protected function getCacheFile(string $key): string
-	{
-		$cacheKey = substr_replace(
-			$key,
-			trim(strtr($this->hint, '\\/@', '.._'), '.') . '-',
-			strpos($key, Cache::NAMESPACE_SEPARATOR) + 1,
-			0
-		);
+    /**
+     * Returns file name.
+     *
+     * @param string $key
+     * @return string
+     */
+    protected function getCacheFile(string $key): string
+    {
+        $cacheKey = substr_replace(
+            $key,
+            trim(strtr($this->hint, '\\/@', '.._'), '.') . '-',
+            strpos($key, Cache::NAMESPACE_SEPARATOR) + 1,
+            0
+        );
 
-		return parent::getCacheFile($cacheKey) . '.php';
-	}
+        return parent::getCacheFile($cacheKey) . '.php';
+    }
 
 }

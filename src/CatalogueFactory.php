@@ -15,103 +15,110 @@ use Kdyby;
 class CatalogueFactory
 {
 
-	use \Nette\SmartObject;
+    use \Nette\SmartObject;
 
-	/**
-	 * @var \Kdyby\Translation\FallbackResolver
-	 */
-	private $fallbackResolver;
+    /**
+     * @var \Kdyby\Translation\FallbackResolver
+     */
+    private $fallbackResolver;
 
-	/**
-	 * @var \Kdyby\Translation\IResourceLoader
-	 */
-	private $loader;
+    /**
+     * @var \Kdyby\Translation\IResourceLoader
+     */
+    private $loader;
 
-	/**
-	 * @var array[]
-	 */
-	private $resources = [];
+    /**
+     * @var array <string, array<int, array<int, string>|string>>
+     */
+    private $resources = [];
 
-	public function __construct(FallbackResolver $fallbackResolver, IResourceLoader $loader)
-	{
-		$this->fallbackResolver = $fallbackResolver;
-		$this->loader = $loader;
-	}
+    public function __construct(FallbackResolver $fallbackResolver, IResourceLoader $loader)
+    {
+        $this->fallbackResolver = $fallbackResolver;
+        $this->loader = $loader;
+    }
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function addResource($format, $resource, $locale, $domain = 'messages')
-	{
-		$this->resources[$locale][] = [$format, $resource, $domain];
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function addResource(string $format, string $resource, string $locale, ?string $domain): void
+    {
+        /** @var string $domain */
+        $domain = $domain ?: 'messages';
+        $this->resources[$locale][] = [$format, $resource, $domain];
+    }
 
-	/**
-	 * @return array
-	 */
-	public function getResources()
-	{
-		$list = [];
-		foreach ($this->resources as $locale => $resources) {
-			foreach ($resources as $meta) {
-				$list[] = $meta[1]; // resource file
-			}
-		}
+    /**
+     * @return array<int,string>
+     */
+    public function getResources(): array
+    {
+        $list = [];
+        foreach ($this->resources as $locale => $resources) {
+            foreach ($resources as $meta) {
+                $list[] = $meta[1]; // resource file
+            }
+        }
 
-		return $list;
-	}
+        return $list;
+    }
 
-	/**
-	 * @param \Kdyby\Translation\Translator $translator
-	 * @param \Symfony\Component\Translation\MessageCatalogueInterface[] $availableCatalogues
-	 * @param string $locale
-	 * @throws \Symfony\Component\Translation\Exception\NotFoundResourceException
-	 * @return \Symfony\Component\Translation\MessageCatalogueInterface
-	 */
-	public function createCatalogue(Translator $translator, array &$availableCatalogues, $locale)
-	{
-		try {
-			$this->doLoadCatalogue($availableCatalogues, $locale);
+    /**
+     * @param \Kdyby\Translation\Translator $translator
+     * @param \Symfony\Component\Translation\MessageCatalogueInterface[] $availableCatalogues
+     * @param string $locale
+     * @throws \Symfony\Component\Translation\Exception\NotFoundResourceException
+     * @return \Symfony\Component\Translation\MessageCatalogueInterface
+     */
+    public function createCatalogue(Translator $translator, array &$availableCatalogues, $locale): \Symfony\Component\Translation\MessageCatalogueInterface
+    {
+        try {
+            $this->doLoadCatalogue($availableCatalogues, $locale);
+        } catch (\Symfony\Component\Translation\Exception\NotFoundResourceException $e) {
+            if (!$this->fallbackResolver->compute($translator, $locale)) {
+                throw $e;
+            }
+        }
 
-		} catch (\Symfony\Component\Translation\Exception\NotFoundResourceException $e) {
-			if (!$this->fallbackResolver->compute($translator, $locale)) {
-				throw $e;
-			}
-		}
+        $current = $availableCatalogues[$locale];
 
-		$current = $availableCatalogues[$locale];
+        $chain = [$locale => TRUE];
+        foreach ($this->fallbackResolver->compute($translator, $locale) as $fallback) {
+            if (!isset($availableCatalogues[$fallback])) {
+                $this->doLoadCatalogue($availableCatalogues, $fallback);
+            }
 
-		$chain = [$locale => TRUE];
-		foreach ($this->fallbackResolver->compute($translator, $locale) as $fallback) {
-			if (!isset($availableCatalogues[$fallback])) {
-				$this->doLoadCatalogue($availableCatalogues, $fallback);
-			}
+            $newFallback = $availableCatalogues[$fallback];
+            $newFallbackFallback = $newFallback->getFallbackCatalogue();
+            if ($newFallbackFallback !== NULL && isset($chain[$newFallbackFallback->getLocale()])) {
+                break;
+            }
 
-			$newFallback = $availableCatalogues[$fallback];
-			$newFallbackFallback = $newFallback->getFallbackCatalogue();
-			if ($newFallbackFallback !== NULL && isset($chain[$newFallbackFallback->getLocale()])) {
-				break;
-			}
+            $current->addFallbackCatalogue($newFallback);
+            $current = $newFallback;
+            $chain[$fallback] = TRUE;
+        }
 
-			$current->addFallbackCatalogue($newFallback);
-			$current = $newFallback;
-			$chain[$fallback] = TRUE;
-		}
+        return $availableCatalogues[$locale];
+    }
 
-		return $availableCatalogues[$locale];
-	}
+    /**
+     * 
+     * @param array<string, MessageCatalogue> $availableCatalogues
+     * @param ?string $locale
+     * @return MessageCatalogue
+     */
+    private function doLoadCatalogue(array &$availableCatalogues, ?string $locale): MessageCatalogue
+    {
+        $availableCatalogues[$locale] = $catalogue = new MessageCatalogue($locale);
 
-	private function doLoadCatalogue(array &$availableCatalogues, $locale)
-	{
-		$availableCatalogues[$locale] = $catalogue = new MessageCatalogue($locale);
+        if (isset($this->resources[$locale])) {
+            foreach ($this->resources[$locale] as $resource) {
+                $this->loader->loadResource($resource[0], $resource[1], $resource[2], $catalogue);
+            }
+        }
 
-		if (isset($this->resources[$locale])) {
-			foreach ($this->resources[$locale] as $resource) {
-				$this->loader->loadResource($resource[0], $resource[1], $resource[2], $catalogue);
-			}
-		}
-
-		return $catalogue;
-	}
+        return $catalogue;
+    }
 
 }

@@ -13,22 +13,22 @@ namespace Kdyby\Translation;
 class MessageCatalogue extends \Symfony\Component\Translation\MessageCatalogue
 {
 
-	use \Nette\SmartObject;
+    use \Nette\SmartObject;
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function get($id, $domain = 'messages')
-	{
-		if ($this->defines($id, $domain)) {
-			return parent::get($id, $domain);
-		}
+    /**
+     * {@inheritdoc}
+     */
+    public function get($id, $domain = 'messages')
+    {
+        if ($this->defines($id, $domain)) {
+            return parent::get($id, $domain);
+        }
 
-		if ($this->getFallbackCatalogue() !== NULL) {
-			return $this->getFallbackCatalogue()->get($id, $domain);
-		}
+        if ($this->getFallbackCatalogue() !== NULL) {
+            return $this->getFallbackCatalogue()->get($id, $domain);
+        }
 
-		return "\x01";
-	}
+        return "\x01";
+    }
 
 }

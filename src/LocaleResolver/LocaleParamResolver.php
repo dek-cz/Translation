@@ -17,56 +17,56 @@ use Nette\Application\Request;
 class LocaleParamResolver implements \Kdyby\Translation\IUserLocaleResolver
 {
 
-	use \Nette\SmartObject;
+    use \Nette\SmartObject;
 
-	/**
-	 * @var \Nette\Application\Request
-	 */
-	private $request;
+    /**
+     * @var \Nette\Application\Request
+     */
+    private $request;
 
-	/**
-	 * @var \Kdyby\Translation\Translator
-	 */
-	private $translator;
+    /**
+     * @var \Kdyby\Translation\Translator
+     */
+    private $translator;
 
-	public function setTranslator(Translator $translator)
-	{
-		$this->translator = $translator;
-	}
+    public function setTranslator(Translator $translator): void
+    {
+        $this->translator = $translator;
+    }
 
-	/**
-	 * @param \Nette\Application\Application $sender
-	 * @param \Nette\Application\Request $request
-	 */
-	public function onRequest(Application $sender, Request $request)
-	{
-		$params = $request->getParameters();
-		if ($request->getMethod() === Request::FORWARD && empty($params['locale'])) {
-			return;
-		}
+    /**
+     * @param \Nette\Application\Application $sender
+     * @param \Nette\Application\Request $request
+     */
+    public function onRequest(Application $sender, Request $request): void
+    {
+        $params = $request->getParameters();
+        if ($request->getMethod() === Request::FORWARD && empty($params['locale'])) {
+            return;
+        }
 
-		$this->request = $request;
+        $this->request = $request;
 
-		if (!$this->translator) {
-			return;
-		}
+        if (!$this->translator instanceof Translator) {
+            return;
+        }
 
-		$this->translator->setLocale('');
-		$this->translator->getLocale(); // invoke resolver
-	}
+        $this->translator->setLocale('');
+        $this->translator->getLocale(); // invoke resolver
+    }
 
-	/**
-	 * @param \Kdyby\Translation\Translator $translator
-	 * @return string|NULL
-	 */
-	public function resolve(Translator $translator)
-	{
-		if ($this->request === NULL) {
-			return NULL;
-		}
+    /**
+     * @param \Kdyby\Translation\Translator $translator
+     * @return string|NULL
+     */
+    public function resolve(Translator $translator)
+    {
+        if ($this->request === NULL) {
+            return NULL;
+        }
 
-		$params = $this->request->getParameters();
-		return !empty($params['locale']) ? $params['locale'] : NULL;
-	}
+        $params = $this->request->getParameters();
+        return !empty($params['locale']) ? $params['locale'] : NULL;
+    }
 
 }

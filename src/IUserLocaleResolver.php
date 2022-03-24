@@ -13,10 +13,10 @@ namespace Kdyby\Translation;
 interface IUserLocaleResolver
 {
 
-	/**
-	 * @param \Kdyby\Translation\Translator $translator
-	 * @return string|NULL
-	 */
-	public function resolve(Translator $translator);
+    /**
+     * @param \Kdyby\Translation\Translator $translator
+     * @return string|NULL
+     */
+    public function resolve(Translator $translator);
 
 }

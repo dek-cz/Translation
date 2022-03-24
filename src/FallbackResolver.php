@@ -13,48 +13,54 @@ namespace Kdyby\Translation;
 class FallbackResolver
 {
 
-	use \Nette\SmartObject;
+    use \Nette\SmartObject;
 
-	/**
-	 * @var array
-	 */
-	private $fallbackLocales = [];
+    /**
+     * @var array<string>
+     */
+    private $fallbackLocales = [];
 
-	/**
-	 * @param array $fallbackLocales
-	 */
-	public function setFallbackLocales(array $fallbackLocales)
-	{
-		$this->fallbackLocales = $fallbackLocales;
-	}
+    /**
+     * @param array<string> $fallbackLocales
+     */
+    public function setFallbackLocales(array $fallbackLocales): void
+    {
+        $this->fallbackLocales = $fallbackLocales;
+    }
 
-	public function compute(Translator $translator, $locale)
-	{
-		$locales = [];
-		foreach ($this->fallbackLocales as $fallback) {
-			if ($fallback === $locale) {
-				continue;
-			}
+    /**
+     * 
+     * @param Translator $translator
+     * @param string $locale
+     * @return array<string>
+     */
+    public function compute(Translator $translator, string $locale): array
+    {
+        $locales = [];
+        foreach ($this->fallbackLocales as $fallback) {
+            if ($fallback === $locale) {
+                continue;
+            }
 
-			$locales[] = $fallback;
-		}
+            $locales[] = $fallback;
+        }
 
-		if (strrchr($locale, '_') !== FALSE) {
-			array_unshift($locales, substr($locale, 0, -strlen(strrchr($locale, '_'))));
-		}
+        if (strrchr($locale, '_') !== FALSE) {
+            array_unshift($locales, substr($locale, 0, -strlen(strrchr($locale, '_'))));
+        }
 
-		foreach ($translator->getAvailableLocales() as $available) {
-			if ($available === $locale) {
-				continue;
-			}
+        foreach ($translator->getAvailableLocales() as $available) {
+            if ($available === $locale) {
+                continue;
+            }
 
-			if (substr($available, 0, 2) === substr($locale, 0, 2)) {
-				array_unshift($locales, $available);
-				break;
-			}
-		}
+            if (substr($available, 0, 2) === substr($locale, 0, 2)) {
+                array_unshift($locales, $available);
+                break;
+            }
+        }
 
-		return array_unique($locales);
-	}
+        return array_unique($locales);
+    }
 
 }

@@ -19,30 +19,37 @@ use Symfony\Component\Translation\MessageCatalogue;
 class NeonFileDumper extends \Symfony\Component\Translation\Dumper\FileDumper
 {
 
-	use \Nette\SmartObject;
+    use \Nette\SmartObject;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public function formatCatalogue(MessageCatalogue $messages, $domain, array $options = [])
-	{
-		return Neon::encode($messages->all($domain), Neon::BLOCK);
-	}
+    /**
+     * Transforms a domain of a message catalogue to its string representation.
+     *
+     * @param MessageCatalogue $messages
+     * @param string $domain
+     * @param array<string,string> $options
+     * @return string representation
+     */
+    public function formatCatalogue(MessageCatalogue $messages, $domain, array $options = []): string
+    {
+        return Neon::encode($messages->all($domain), Neon::BLOCK);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	protected function format(MessageCatalogue $messages, $domain)
-	{
-		return Neon::encode($messages->all($domain), Neon::BLOCK);
-	}
+    /**
+     * @param MessageCatalogue $messages
+     * @param string $domain
+     * @return string representation
+     */
+    protected function format(MessageCatalogue $messages, $domain): string
+    {
+        return Neon::encode($messages->all($domain), Neon::BLOCK);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	protected function getExtension()
-	{
-		return 'neon';
-	}
+    /**
+     * {@inheritDoc}
+     */
+    protected function getExtension(): string
+    {
+        return 'neon';
+    }
 
 }

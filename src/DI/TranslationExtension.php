@@ -35,8 +35,9 @@ use Nette\Bridges\ApplicationLatte\LatteFactory;
 use Nette\Configurator;
 use Nette\DI\Compiler;
 use Nette\DI\Definitions\FactoryDefinition;
+use Nette\DI\Definitions\Definition;
 use Nette\DI\Helpers;
-use Nette\DI\Statement;
+use Nette\DI\Definitions\Statement;
 use Nette\PhpGenerator\ClassType as ClassTypeGenerator;
 use Nette\PhpGenerator\PhpLiteral;
 use Nette\Reflection\ClassType as ReflectionClassType;
@@ -95,7 +96,7 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
     ];
 
     /**
-     * @var array
+     * @var array<int|string,int|string>
      */
     private $loaders;
 
@@ -123,9 +124,10 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         $this->loaders = [];
 
         $builder = $this->getContainerBuilder();
-        /** @var array $config */
+        /** @var array<string,string|array<string>> $config */
         $config = $this->config;
-        $config['cache'] = new Statement($config['cache'], [dirname(Helpers::expand('%tempDir%/cache', $builder->parameters))]);
+        $dir = Helpers::expand('%tempDir%/cache', $builder->parameters);
+        $config['cache'] = new Statement($config['cache'], [dirname(is_string($dir) ? $dir : '')]);
 
         $translator = $builder->addDefinition($this->prefix('default'))
             ->setFactory(KdybyTranslator::class, [$this->prefix('@userLocaleResolver')])
@@ -140,8 +142,9 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
             ->setFactory(CatalogueCompiler::class, self::filterArgs($config['cache']));
 
         if ($config['debugger'] && interface_exists(IBarPanel::class)) {
+            $appDir = Helpers::expand('%appDir%', $builder->parameters);
             $builder->addDefinition($this->prefix('panel'))
-                ->setFactory(Panel::class, [dirname(Helpers::expand('%appDir%', $builder->parameters))])
+                ->setFactory(Panel::class, [dirname(is_string($appDir) ? $appDir : '')])
                 ->addSetup('setLocaleWhitelist', [$config['whitelist']]);
 
             $translator->addSetup('?->register(?)', [$this->prefix('@panel'), '@self']);
@@ -187,14 +190,21 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
             ->setClass(TranslationLoader::class);
 
         $loaders = $this->loadFromFile(__DIR__ . '/config/loaders.neon');
-        $this->loadLoaders($loaders, $config['loaders'] ?: array_keys($loaders));
+        /** @var array<string> $cloaders * */
+        $cloaders = $config['loaders'] ?: array_keys($loaders);
+        $this->loadLoaders($loaders, $cloaders);
 
         if ($this->isRegisteredConsoleExtension()) {
             $this->loadConsole($config);
         }
     }
 
-    protected function loadLocaleResolver(array $config)
+    /**
+     * 
+     * @param array<string, array<string>|\Nette\DI\Definitions\Statement|string> $config
+     * @return void
+     */
+    protected function loadLocaleResolver(array $config): void
     {
         $builder = $this->getContainerBuilder();
 
@@ -213,17 +223,19 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
             ->setFactory(ChainResolver::class);
 
         $resolvers = [];
-        if ($config['resolvers'][self::RESOLVER_HEADER]) {
+        /** @var array<string, string> $cresolvers * */
+        $cresolvers = $config['resolvers'];
+        if ($cresolvers[self::RESOLVER_HEADER]) {
             $resolvers[] = $this->prefix('@userLocaleResolver.acceptHeader');
             $chain->addSetup('addResolver', [$this->prefix('@userLocaleResolver.acceptHeader')]);
         }
 
-        if ($config['resolvers'][self::RESOLVER_REQUEST]) {
+        if ($cresolvers[self::RESOLVER_REQUEST]) {
             $resolvers[] = $this->prefix('@userLocaleResolver.param');
             $chain->addSetup('addResolver', [$this->prefix('@userLocaleResolver.param')]);
         }
 
-        if ($config['resolvers'][self::RESOLVER_SESSION]) {
+        if ($cresolvers[self::RESOLVER_SESSION]) {
             $resolvers[] = $this->prefix('@userLocaleResolver.session');
             $chain->addSetup('addResolver', [$this->prefix('@userLocaleResolver.session')]);
         }
@@ -235,17 +247,23 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
     }
 
-    protected function loadConsole(array $config)
+    /**
+     * 
+     * @param array<string, array<string>|\Nette\DI\Definitions\Statement|string> $config
+     */
+    protected function loadConsole(array $config): void
     {
+        /** @var array<string> $cdir */
+        $cdir = $config['dirs'];
         $builder = $this->getContainerBuilder();
         Validators::assertField($config, 'dirs', 'list');
         $builder->addDefinition($this->prefix('console.extract'))
             ->setFactory(ExtractCommand::class)
-            ->addSetup('$defaultOutputDir', [reset($config['dirs'])])
+            ->addSetup('$defaultOutputDir', [reset($cdir)])
             ->addTag(ConsoleExtension::COMMAND_TAG, 'latte');
     }
 
-    protected function loadDumpers()
+    protected function loadDumpers(): void
     {
         $builder = $this->getContainerBuilder();
 
@@ -256,7 +274,12 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
     }
 
-    protected function loadLoaders(array $loaders, array $allowed)
+    /**
+     * 
+     * @param array<string,string> $loaders
+     * @param array<string> $allowed
+     */
+    protected function loadLoaders(array $loaders, array $allowed): void
     {
         $builder = $this->getContainerBuilder();
 
@@ -270,7 +293,7 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
     }
 
-    protected function loadExtractors()
+    protected function loadExtractors(): void
     {
         $builder = $this->getContainerBuilder();
 
@@ -281,10 +304,10 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
     }
 
-    public function beforeCompile()
+    public function beforeCompile(): void
     {
         $builder = $this->getContainerBuilder();
-        /** @var array $config */
+        /** @var array<string, array<string>|string> $config */
         $config = $this->config;
 
         $registerToLatte = function (FactoryDefinition $def)
@@ -302,11 +325,15 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
 
         if ($builder->hasDefinition($latteFactoryService) && (self::isOfType($builder->getDefinition($latteFactoryService)->getClass(), LatteFactory::class) || self::isOfType($builder->getDefinition($latteFactoryService)->getClass(), ILatteFactory::class))) {
-            $registerToLatte($builder->getDefinition($latteFactoryService));
+            /** @var FactoryDefinition $lfdef * */
+            $lfdef = $builder->getDefinition($latteFactoryService);
+            $registerToLatte($lfdef);
         }
 
         if ($builder->hasDefinition('nette.latte')) {
-            $registerToLatte($builder->getDefinition('nette.latte'));
+            /** @var FactoryDefinition $nfdef * */
+            $nfdef = $builder->getDefinition('nette.latte');
+            $registerToLatte($nfdef);
         }
 
         $applicationService = $builder->getByType(Application::class) ?: 'application';
@@ -363,14 +390,17 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
             if (!$extension instanceof ITranslationProvider) {
                 continue;
             }
-
-            $config['dirs'] = array_merge($config['dirs'], array_values($extension->getTranslationResources()));
+            /** @var array<string> $cdir * */
+            $cdir = $config['dirs'];
+            $config['dirs'] = array_merge($cdir, array_values($extension->getTranslationResources()));
         }
-
+        /** @var array<string> $cdir * */
+        $cdir = $config['dirs'];
         $config['dirs'] = array_map(function ($dir) use ($builder)
         {
-            return str_replace((DIRECTORY_SEPARATOR === '/') ? '\\' : '/', DIRECTORY_SEPARATOR, Helpers::expand($dir, $builder->parameters));
-        }, $config['dirs']);
+            $dir = Helpers::expand($dir, $builder->parameters);
+            return str_replace((DIRECTORY_SEPARATOR === '/') ? '\\' : '/', DIRECTORY_SEPARATOR, is_string($dir) ? $dir : '');
+        }, $cdir);
 
         $dirs = array_values(array_filter($config['dirs'], Closure::fromCallable('is_dir')));
         if (count($dirs) > 0) {
@@ -382,12 +412,19 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
     }
 
-    protected function loadResourcesFromDirs($dirs)
+    /**
+     * 
+     * @param array<string> $dirs
+     * @return void
+     */
+    protected function loadResourcesFromDirs(array $dirs): void
     {
         $builder = $this->getContainerBuilder();
+        /** @var array<string, array<string>|string> $config */
         $config = $this->config;
-
-        $whitelistRegexp = KdybyTranslator::buildWhitelistRegexp($config['whitelist']);
+        /** @var array<string> $whitelist */
+        $whitelist = $config['whitelist'];
+        $whitelistRegexp = KdybyTranslator::buildWhitelistRegexp($whitelist);
         /** @var \Nette\DI\Definitions\ServiceDefinition $translator */
         $translator = $builder->getDefinition($this->prefix('default'));
 
@@ -418,7 +455,7 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
      * @param string $locale
      * @param string $domain
      */
-    protected function validateResource($format, $file, $locale, $domain)
+    protected function validateResource(string $format, string $file, string $locale, string $domain): void
     {
         $builder = $this->getContainerBuilder();
 
@@ -428,7 +465,7 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
 
         try {
             /** @var \Nette\DI\Definitions\ServiceDefinition $def */
-            $def = $builder->getDefinition($this->loaders[$format]);
+            $def = $builder->getDefinition((string) $this->loaders[$format]);
             $refl = ReflectionClassType::from($def->getEntity() ?: $def->getClass());
             $method = $refl->getConstructor();
             if ($method !== NULL && $method->getNumberOfRequiredParameters() > 1) {
@@ -450,7 +487,7 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
     }
 
-    public function afterCompile(ClassTypeGenerator $class)
+    public function afterCompile(ClassTypeGenerator $class): void
     {
         $initialize = $class->getMethod('initialize');
         if (class_exists(Debugger::class)) {
@@ -458,7 +495,11 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
         }
     }
 
-    private function isRegisteredConsoleExtension()
+    /**
+     * 
+     * @return bool
+     */
+    private function isRegisteredConsoleExtension(): bool
     {
         foreach ($this->compiler->getExtensions() as $extension) {
             if ($extension instanceof ConsoleExtension) {
@@ -472,7 +513,7 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
     /**
      * @param \Nette\Configurator $configurator
      */
-    public static function register(Configurator $configurator)
+    public static function register(Configurator $configurator): void
     {
         $configurator->onCompile[] = function ($config, Compiler $compiler)
         {
@@ -481,20 +522,20 @@ class TranslationExtension extends \Nette\DI\CompilerExtension
     }
 
     /**
-     * @param string|\stdClass $statement
-     * @return \Nette\DI\Statement[]
+     * @param array<string>|\Nette\DI\Definitions\Statement|string $statement
+     * @return array<string>
      */
-    protected static function filterArgs($statement)
+    protected static function filterArgs(array|\Nette\DI\Definitions\Statement|string $statement): array
     {
         return Helpers::filterArguments([is_string($statement) ? new Statement($statement) : $statement]);
     }
 
     /**
-     * @param string|NULL $class
+     * @param ?string $class
      * @param string $type
      * @return bool
      */
-    private static function isOfType($class, $type)
+    private static function isOfType(?string $class, string $type): bool
     {
         return $class !== NULL && ($class === $type || is_subclass_of($class, $type));
     }

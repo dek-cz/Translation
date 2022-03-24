@@ -1,11 +1,7 @@
+includes:
+	- vendor/phpstan/phpstan-nette/extension.neon
+	- vendor/phpstan/phpstan-nette/rules.neon
+
 parameters:
 	ignoreErrors:
 		- '#Constant TEMP_DIR not found#'
-		# Optional arguments
-		- "#Casting to string something that's already string#"
-		- "#Casting to int something that's already int#"
-		- "#Casting to array something that's already array#"
-		# Other errors
-		- '#Access to an undefined property Nette\\Http\\SessionSection\|stdClass::\$locale#'
-		- '#Parameter \#1 \$locale of method Symfony\\Component\\Translation\\Translator::setLocale\(\) expects string, string\|null given#'
-		- '#Array \(array\<Symfony\\Component\\Translation\\Loader\\LoaderInterface\>\) does not accept object#'

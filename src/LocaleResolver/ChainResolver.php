@@ -16,35 +16,35 @@ use Kdyby\Translation\Translator;
 class ChainResolver implements \Kdyby\Translation\IUserLocaleResolver
 {
 
-	use \Nette\SmartObject;
+    use \Nette\SmartObject;
 
-	/**
-	 * @var array|\Kdyby\Translation\IUserLocaleResolver[]
-	 */
-	private $resolvers = [];
+    /**
+     * @var array|\Kdyby\Translation\IUserLocaleResolver[]
+     */
+    private $resolvers = [];
 
-	/**
-	 * @param \Kdyby\Translation\IUserLocaleResolver $resolver
-	 */
-	public function addResolver(IUserLocaleResolver $resolver)
-	{
-		array_unshift($this->resolvers, $resolver); // first the newer
-	}
+    /**
+     * @param \Kdyby\Translation\IUserLocaleResolver $resolver
+     */
+    public function addResolver(IUserLocaleResolver $resolver): void
+    {
+        array_unshift($this->resolvers, $resolver); // first the newer
+    }
 
-	/**
-	 * @param \Kdyby\Translation\Translator $translator
-	 * @return string|NULL
-	 */
-	public function resolve(Translator $translator)
-	{
-		foreach ($this->resolvers as $resolver) {
-			$locale = $resolver->resolve($translator);
-			if ($locale !== NULL) {
-				return $locale;
-			}
-		}
+    /**
+     * @param \Kdyby\Translation\Translator $translator
+     * @return string|NULL
+     */
+    public function resolve(Translator $translator)
+    {
+        foreach ($this->resolvers as $resolver) {
+            $locale = $resolver->resolve($translator);
+            if ($locale !== NULL) {
+                return $locale;
+            }
+        }
 
-		return $translator->getDefaultLocale();
-	}
+        return $translator->getDefaultLocale();
+    }
 
 }

@@ -12,25 +12,25 @@ namespace Kdyby\Translation;
 
 interface Exception
 {
-
+    
 }
 
 class InvalidArgumentException extends \InvalidArgumentException implements \Kdyby\Translation\Exception
 {
-
+    
 }
 
 class InvalidStateException extends \RuntimeException implements \Kdyby\Translation\Exception
 {
-
+    
 }
 
 class InvalidResourceException extends \UnexpectedValueException implements \Kdyby\Translation\Exception
 {
-
+    
 }
 
 class LoaderNotFoundException extends \RuntimeException implements \Kdyby\Translation\Exception
 {
-
+    
 }
