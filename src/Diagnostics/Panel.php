@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,61 +10,52 @@
 
 namespace Kdyby\Translation\Diagnostics;
 
+use Exception;
+use Kdyby\Translation\InvalidResourceException;
+use Kdyby\Translation\IUserLocaleResolver;
 use Kdyby\Translation\Translator;
 use Nette\Application\Application;
 use Nette\Application\Request;
 use Nette\Reflection\ClassType;
+use Nette\SmartObject;
 use Nette\Utils\Arrays;
 use Nette\Utils\Html;
 use Nette\Utils\Strings;
 use Symfony\Component\Translation\Loader\YamlFileLoader;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Throwable;
 use Tracy\BlueScreen;
 use Tracy\Debugger;
 use Tracy\Helpers;
+use Tracy\IBarPanel;
 
-class Panel implements \Tracy\IBarPanel
+class Panel implements IBarPanel
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var \Kdyby\Translation\Translator
-     */
+    /** @var Translator */
     private $translator;
 
-    /**
-     * @var array<int|string, array<string|object|null>>
-     */
+    /** @var array<int|string, array<string|object|null>> */
     private $untranslated = [];
 
-    /**
-     * @var array<string, array<string>>
-     */
+    /** @var array<string, array<string>> */
     private $resources = [];
 
-    /**
-     * @var array<string, array<string>>
-     */
+    /** @var array<string, array<string>> */
     private $ignoredResources = [];
 
-    /**
-     * @var array<string>
-     */
+    /** @var array<string> */
     private $localeWhitelist = [];
 
-    /**
-     * @var array<\Kdyby\Translation\IUserLocaleResolver>
-     */
+    /** @var array<IUserLocaleResolver> */
     private $localeResolvers = [];
 
-    /**
-     * @var array<array<string, array<string|null>|object|string|null>>
-     */
+    /** @var array<array<string, array<string|null>|object|string|null>> */
     private $onRequestLocaleSnapshot = [];
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $rootDir;
 
     /**
@@ -112,7 +103,7 @@ class Panel implements \Tracy\IBarPanel
             foreach ($this->onRequestLocaleSnapshot as $i => $snapshot) {
                 $s = $i > 0 ? '<br>' : '';
 
-                /** @var \Nette\Application\Request $sreq  */
+                /** @var Request $sreq  */
                 $sreq = (object) $snapshot['request'];
                 /** @var array<string> $params  */
                 $params = $sreq->getParameters();
@@ -123,7 +114,7 @@ class Panel implements \Tracy\IBarPanel
                     '<th>' . $h($loc) . '</th></tr>';
 
                 $l = 1;
-                /** @var array<string,\Kdyby\Translation\IUserLocaleResolver> $sres  */
+                /** @var array<string, IUserLocaleResolver> $sres  */
                 $sres = $snapshot['resolvers'];
                 foreach ($sres as $name => $resolvedLocale) {
                     $s .= '<tr><td>' . ($l++) . '.</td><td>' . $h($name) . '</td><td>' . $h($resolvedLocale::class) . '</td></tr>';
@@ -137,6 +128,7 @@ class Panel implements \Tracy\IBarPanel
             if (!empty($panel)) {
                 $panel[] = '<br><br>';
             }
+
             $panel[] = '<h2>Loaded resources</h2>';
             $panel[] = $this->renderResources($this->resources);
         }
@@ -162,7 +154,6 @@ class Panel implements \Tracy\IBarPanel
     }
 
     /**
-     * 
      * @return string
      */
     private function renderUntranslated(): string
@@ -175,7 +166,7 @@ class Panel implements \Tracy\IBarPanel
 
             $s .= '<tr><td>';
 
-            if ($message instanceof \Exception || $message instanceof \Throwable) {
+            if ($message instanceof Exception || $message instanceof Throwable) {
                 $s .= '<span style="color:red">' . $h($message->getMessage()) . '</span>';
             } elseif ($message instanceof Html) {
                 $s .= '<span style="color:red">Nette\Utils\Html(' . $h((string) $message) . ')</span>';
@@ -190,7 +181,6 @@ class Panel implements \Tracy\IBarPanel
     }
 
     /**
-     * 
      * @param array<string,array<string,string>> $resourcesMap
      * @return string
      */
@@ -236,10 +226,10 @@ class Panel implements \Tracy\IBarPanel
     }
 
     /**
-     * @param \Exception|\Throwable $e
+     * @param Throwable $e
      * @param string|NULL $domain
      */
-    public function choiceError(\Exception|\Throwable $e, ?string $domain): void
+    public function choiceError(Throwable $e, ?string $domain): void
     {
         $this->untranslated[] = [
             'message' => $e,
@@ -263,7 +253,6 @@ class Panel implements \Tracy\IBarPanel
     }
 
     /**
-     * 
      * @param array<string> $whitelist
      * @return void
      */
@@ -288,8 +277,7 @@ class Panel implements \Tracy\IBarPanel
     }
 
     /**
-     * 
-     * @param array<\Kdyby\Translation\IUserLocaleResolver> $resolvers
+     * @param array<IUserLocaleResolver> $resolvers
      * @return void
      */
     public function setLocaleResolvers(array $resolvers): void
@@ -301,7 +289,6 @@ class Panel implements \Tracy\IBarPanel
     }
 
     /**
-     * 
      * @param Application $app
      * @param Request $request
      * @return void
@@ -321,7 +308,6 @@ class Panel implements \Tracy\IBarPanel
     }
 
     /**
-     * 
      * @param Translator $translator
      * @return self
      */
@@ -337,35 +323,36 @@ class Panel implements \Tracy\IBarPanel
 
     public static function registerBluescreen(): void
     {
-        Debugger::getBlueScreen()->addPanel([get_called_class(), 'renderException']);
+        Debugger::getBlueScreen()->addPanel([static::class, 'renderException']);
     }
 
     /**
-     * 
-     * @param ?\Throwable $e
+     * @param ?Throwable $e
      * @return ?array<string,string>
      */
-    public static function renderException(?\Throwable $e = NULL): ?array
+    public static function renderException(?Throwable $e = null): ?array
     {
-        if ($e === null || !$e instanceof \Kdyby\Translation\InvalidResourceException) {
-            return NULL;
+        if ($e === null || !$e instanceof InvalidResourceException) {
+            return null;
         }
-        /** @var ?\Throwable $test */
+
+        /** @var ?Throwable $test */
         $test = $e->getPrevious();
-        if ($test === NULL) {
-            return NULL;
+        if ($test === null) {
+            return null;
         }
-        /** @var \Throwable $previous */
+
+        /** @var Throwable $previous */
         $previous = $e->getPrevious();
-        /** @var \Symfony\Component\Yaml\Exception\ParseException $previous1 */
+        /** @var ParseException $previous1 */
         $previous1 = $previous->getPrevious();
-        if (!$previous1 instanceof \Symfony\Component\Yaml\Exception\ParseException) {
-            return NULL;
+        if (!$previous1 instanceof ParseException) {
+            return null;
         }
 
         $method = YamlFileLoader::class . '::load';
         $call = Helpers::findTrace($previous->getTrace(), $method);
-        if ($call !== NULL) {
+        if ($call !== null) {
             return [
                 'tab' => 'YAML dictionary',
                 'panel' => '<p><b>File:</b> ' . self::editorLink($call['args'][0], $previous1->getParsedLine()) . '</p>'
@@ -373,23 +360,25 @@ class Panel implements \Tracy\IBarPanel
                 . '<p>' . $previous1->getMessage() . ' </p>',
             ];
         }
-        return NULL;
+
+        return null;
     }
 
     /**
      * Returns link to editor.
+     *
      * @param string $file
      * @param int $line
      * @param string|null $text
-     * @return \Nette\Utils\Html|string
+     * @return Html|string
      */
-    private static function editorLink(string $file, int $line, ?string $text = NULL): \Nette\Utils\Html|string
+    private static function editorLink(string $file, int $line, ?string $text = null): Html|string
     {
-        if (Debugger::$editor && is_file($file) && $text !== NULL) {
+        if (Debugger::$editor && is_file($file) && $text !== null) {
             return Html::el('a')
-                    ->href(strtr(Debugger::$editor, ['%file' => rawurlencode($file), '%line' => $line]))
-                    ->setAttribute('title', sprintf('%s:%s', $file, $line))
-                    ->setHtml($text);
+                ->href(strtr(Debugger::$editor, ['%file' => rawurlencode($file), '%line' => $line]))
+                ->setAttribute('title', sprintf('%s:%s', $file, $line))
+                ->setHtml($text);
         } else {
             return Helpers::editorLink($file, $line);
         }

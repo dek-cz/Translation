@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -11,33 +11,31 @@
 namespace Kdyby\Translation;
 
 use Nette\DI\Container as DIContainer;
+use Nette\SmartObject;
 use Nette\Utils\Finder;
+use SplFileInfo;
 use Symfony\Component\Translation\Loader\LoaderInterface;
 use Symfony\Component\Translation\MessageCatalogue;
 
 /**
  * TranslationLoader loads translation messages from translation files.
  */
-class TranslationLoader implements \Kdyby\Translation\IResourceLoader
+class TranslationLoader implements IResourceLoader
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
     /**
      * Loaders used for import.
      *
-     * @var array|\Symfony\Component\Translation\Loader\LoaderInterface[]
+     * @var array|LoaderInterface[]
      */
     private $loaders = [];
 
-    /**
-     * @var array<string,string>
-     */
+    /** @var array<string,string> */
     private $serviceIds = [];
 
-    /**
-     * @var \Nette\DI\Container
-     */
+    /** @var DIContainer */
     private $serviceLocator;
 
     /**
@@ -55,7 +53,7 @@ class TranslationLoader implements \Kdyby\Translation\IResourceLoader
      * Adds a loader to the translation extractor.
      *
      * @param string $format The format of the loader
-     * @param \Symfony\Component\Translation\Loader\LoaderInterface $loader
+     * @param LoaderInterface $loader
      */
     public function addLoader($format, LoaderInterface $loader): void
     {
@@ -63,13 +61,14 @@ class TranslationLoader implements \Kdyby\Translation\IResourceLoader
     }
 
     /**
-     * @return array<\Symfony\Component\Translation\Loader\LoaderInterface>
+     * @return array<LoaderInterface>
      */
     public function getLoaders(): array
     {
         foreach ($this->serviceIds as $format => $loaderId) {
             $this->loaders[$format] = $this->serviceLocator->getService($loaderId);
         }
+
         $this->serviceIds = [];
 
         return $this->loaders;
@@ -79,7 +78,7 @@ class TranslationLoader implements \Kdyby\Translation\IResourceLoader
      * Loads translation messages from a directory to the catalogue.
      *
      * @param string $directory the directory to look into
-     * @param \Symfony\Component\Translation\MessageCatalogue $catalogue the catalogue
+     * @param MessageCatalogue $catalogue the catalogue
      */
     public function loadMessages($directory, MessageCatalogue $catalogue): void
     {
@@ -87,7 +86,7 @@ class TranslationLoader implements \Kdyby\Translation\IResourceLoader
             // load any existing translation files
             $extension = $catalogue->getLocale() . '.' . $format;
             foreach (Finder::findFiles('*.' . $extension)->from($directory) as $file) {
-                /** @var \SplFileInfo $file */
+                /** @var SplFileInfo $file */
                 $domain = substr($file->getFileName(), 0, -1 * strlen($extension) - 1);
                 $this->loadResource($format, $file->getPathname(), $domain, $catalogue);
             }
@@ -98,14 +97,14 @@ class TranslationLoader implements \Kdyby\Translation\IResourceLoader
      * @param string $format
      * @param string $resource
      * @param string $domain
-     * @param \Symfony\Component\Translation\MessageCatalogue $catalogue
-     * @throws \Kdyby\Translation\LoaderNotFoundException
+     * @param MessageCatalogue $catalogue
+     * @throws LoaderNotFoundException
      */
     public function loadResource($format, $resource, $domain, MessageCatalogue $catalogue): void
     {
         if (!isset($this->loaders[$format])) {
             if (!isset($this->serviceIds[$format])) {
-                throw new \Kdyby\Translation\LoaderNotFoundException(sprintf('The "%s" translation loader is not registered.', $resource[0]));
+                throw new LoaderNotFoundException(sprintf('The "%s" translation loader is not registered.', $resource[0]));
             }
 
             $this->loaders[$format] = $this->serviceLocator->getService($this->serviceIds[$format]);

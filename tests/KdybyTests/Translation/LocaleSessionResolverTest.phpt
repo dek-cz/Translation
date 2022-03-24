@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * Test: Kdyby\Translation\LocaleParamResolver.
@@ -16,39 +16,39 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-class LocaleSessionResolverTest extends \KdybyTests\Translation\TestCase
+class LocaleSessionResolverTest extends TestCase
 {
 
-	public function testInvalidateLocaleOnRequest()
-	{
-		$container = $this->createContainer();
+    public function testInvalidateLocaleOnRequest()
+    {
+        $container = $this->createContainer();
 
-		/** @var \Kdyby\Translation\Translator $translator */
-		$translator = $container->getByType(Translator::class);
+        /** @var Translator $translator */
+        $translator = $container->getByType(Translator::class);
 
-		/** @var \Nette\Application\Application $app */
-		$app = $container->getByType(Application::class);
+        /** @var Application $app */
+        $app = $container->getByType(Application::class);
 
-		/** @var \Kdyby\Translation\LocaleResolver\SessionResolver $sessionResolver */
-		$sessionResolver = $container->getByType(SessionResolver::class);
+        /** @var SessionResolver $sessionResolver */
+        $sessionResolver = $container->getByType(SessionResolver::class);
 
-		// this should fallback to default locale
-		Assert::same('en', $translator->getLocale());
+        // this should fallback to default locale
+        Assert::same('en', $translator->getLocale());
 
-		// force cs locale
-		$sessionResolver->setLocale('cs');
+        // force cs locale
+        $sessionResolver->setLocale('cs');
 
-		// locale from request parameter should be ignored
-		$app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'en']));
-		Assert::same('cs', $translator->getLocale());
+        // locale from request parameter should be ignored
+        $app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'en']));
+        Assert::same('cs', $translator->getLocale());
 
-		// force en locale
-		$sessionResolver->setLocale('en');
+        // force en locale
+        $sessionResolver->setLocale('en');
 
-		// locale from request parameter should be ignored
-		$app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'cs']));
-		Assert::same('en', $translator->getLocale());
-	}
+        // locale from request parameter should be ignored
+        $app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'cs']));
+        Assert::same('en', $translator->getLocale());
+    }
 
 }
 

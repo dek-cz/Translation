@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,23 +10,23 @@
 
 namespace Kdyby\Translation\LocaleResolver;
 
+use Kdyby\Translation\IUserLocaleResolver;
 use Kdyby\Translation\Translator;
 use Nette\Http\IRequest;
+use Nette\SmartObject;
 
-class AcceptHeaderResolver implements \Kdyby\Translation\IUserLocaleResolver
+class AcceptHeaderResolver implements IUserLocaleResolver
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    const ACCEPT_LANGUAGE_HEADER = 'Accept-Language';
+    public const ACCEPT_LANGUAGE_HEADER = 'Accept-Language';
 
-    /**
-     * @var \Nette\Http\IRequest
-     */
+    /** @var IRequest */
     private $httpRequest;
 
     /**
-     * @param \Nette\Http\IRequest $httpRequest
+     * @param IRequest $httpRequest
      */
     public function __construct(IRequest $httpRequest)
     {
@@ -38,15 +38,14 @@ class AcceptHeaderResolver implements \Kdyby\Translation\IUserLocaleResolver
      * This method uses the code from Nette\Http\Request::detectLanguage.
      *
      * @see https://github.com/nette/http/blob/0d9ef49051fba799148ef877dd32928a68731766/src/Http/Request.php#L294-L326
-     *
-     * @param \Kdyby\Translation\Translator $translator
+     * @param Translator $translator
      * @return string|NULL
      */
     public function resolve(Translator $translator)
     {
         $header = $this->httpRequest->getHeader(self::ACCEPT_LANGUAGE_HEADER);
         if (!$header) {
-            return NULL;
+            return null;
         }
 
         $langs = [];
@@ -58,7 +57,7 @@ class AcceptHeaderResolver implements \Kdyby\Translation\IUserLocaleResolver
         }
 
         if (!$langs) {
-            return NULL;
+            return null;
         }
 
         $s = strtolower($header);  // case insensitive
@@ -67,11 +66,11 @@ class AcceptHeaderResolver implements \Kdyby\Translation\IUserLocaleResolver
         preg_match_all('#(' . implode('|', $langs) . ')(?:-[^\s,;=]+)?\s*(?:;\s*q=([0-9.]+))?#', $s, $matches);
 
         if (!$matches[0]) {
-            return NULL;
+            return null;
         }
 
         $max = 0;
-        $lang = NULL;
+        $lang = null;
         foreach ($matches[1] as $key => $value) {
             $q = $matches[2][$key] === '' ? 1.0 : (float) $matches[2][$key];
             if ($q > $max) {

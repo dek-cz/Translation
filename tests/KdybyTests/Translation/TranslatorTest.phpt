@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * Test: Kdyby\Translation\Translator.
@@ -10,6 +10,7 @@ namespace KdybyTests\Translation;
 
 use Kdyby\Translation\CatalogueCompiler;
 use Kdyby\Translation\CatalogueFactory;
+use Kdyby\Translation\InvalidArgumentException;
 use Kdyby\Translation\Loader\NeonFileLoader;
 use Kdyby\Translation\TranslationLoader;
 use Kdyby\Translation\Translator;
@@ -17,152 +18,152 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-class TranslatorTest extends \KdybyTests\Translation\TestCase
+class TranslatorTest extends TestCase
 {
 
-	public function testDefaultLocale()
-	{
-		$translator = $this->createTranslator();
+    public function testDefaultLocale()
+    {
+        $translator = $this->createTranslator();
 
-		$translator->setDefaultLocale('cs');
-		Assert::same('cs', $translator->getDefaultLocale());
+        $translator->setDefaultLocale('cs');
+        Assert::same('cs', $translator->getDefaultLocale());
 
-		$translator->setDefaultLocale('en');
-		Assert::same('en', $translator->getDefaultLocale());
-	}
+        $translator->setDefaultLocale('en');
+        Assert::same('en', $translator->getDefaultLocale());
+    }
 
-	public function testDefaultLocaleInvalid()
-	{
-		$translator = $this->createTranslator();
+    public function testDefaultLocaleInvalid()
+    {
+        $translator = $this->createTranslator();
 
-		Assert::exception(function () use ($translator) {
-			$translator->setDefaultLocale('cs$');
-		}, 'InvalidArgumentException');
+        Assert::exception(function () use ($translator) {
+            $translator->setDefaultLocale('cs$');
+        }, 'InvalidArgumentException');
 
-		Assert::exception(function () use ($translator) {
-			$translator->setDefaultLocale('cs"');
-		}, 'InvalidArgumentException');
-	}
+        Assert::exception(function () use ($translator) {
+            $translator->setDefaultLocale('cs"');
+        }, 'InvalidArgumentException');
+    }
 
-	public function testAddLoader()
-	{
-		$container = $this->createContainer();
+    public function testAddLoader()
+    {
+        $container = $this->createContainer();
 
-		$loader = new TranslationLoader();
+        $loader = new TranslationLoader();
 
-		/** @var \Kdyby\Translation\Translator $translator */
-		$translator = $container->createInstance(Translator::class, [
-			'localeResolver' => $container->getService('translation.userLocaleResolver'),
-			'loader' => $loader,
-		]);
+        /** @var Translator $translator */
+        $translator = $container->createInstance(Translator::class, [
+            'localeResolver' => $container->getService('translation.userLocaleResolver'),
+            'loader' => $loader,
+        ]);
 
-		Assert::same([], $loader->getLoaders());
+        Assert::same([], $loader->getLoaders());
 
-		$neonLoader = new NeonFileLoader();
-		$translator->addLoader('neon', $neonLoader);
-		Assert::same(['neon' => $neonLoader], $loader->getLoaders());
-	}
+        $neonLoader = new NeonFileLoader();
+        $translator->addLoader('neon', $neonLoader);
+        Assert::same(['neon' => $neonLoader], $loader->getLoaders());
+    }
 
-	public function testAddResource()
-	{
-		$container = $this->createContainer();
+    public function testAddResource()
+    {
+        $container = $this->createContainer();
 
-		/** @var \Kdyby\Translation\CatalogueFactory $catalogueFactory */
-		$catalogueFactory = $container->createInstance(CatalogueFactory::class);
+        /** @var CatalogueFactory $catalogueFactory */
+        $catalogueFactory = $container->createInstance(CatalogueFactory::class);
 
-		/** @var \Kdyby\Translation\CatalogueCompiler $catalogueCompiler */
-		$catalogueCompiler = $container->createInstance(CatalogueCompiler::class, [
-			'catalogueFactory' => $catalogueFactory,
-		]);
+        /** @var CatalogueCompiler $catalogueCompiler */
+        $catalogueCompiler = $container->createInstance(CatalogueCompiler::class, [
+            'catalogueFactory' => $catalogueFactory,
+        ]);
 
-		/** @var \Kdyby\Translation\Translator $translator */
-		$translator = $container->createInstance(Translator::class, [
-			'catalogueCompiler' => $catalogueCompiler,
-			'localeResolver' => $container->getService('translation.userLocaleResolver'),
-		]);
+        /** @var Translator $translator */
+        $translator = $container->createInstance(Translator::class, [
+            'catalogueCompiler' => $catalogueCompiler,
+            'localeResolver' => $container->getService('translation.userLocaleResolver'),
+        ]);
 
-		Assert::same([], $catalogueFactory->getResources());
+        Assert::same([], $catalogueFactory->getResources());
 
-		$translator->addResource('neon', __DIR__ . '/data/files/front.cs_CZ.neon', 'cs_CZ', 'front');
+        $translator->addResource('neon', __DIR__ . '/data/files/front.cs_CZ.neon', 'cs_CZ', 'front');
 
-		Assert::same([
-			__DIR__ . '/data/files/front.cs_CZ.neon',
-		], $catalogueFactory->getResources());
-	}
+        Assert::same([
+            __DIR__ . '/data/files/front.cs_CZ.neon',
+            ], $catalogueFactory->getResources());
+    }
 
-	public function testAvailableLocales()
-	{
-		$translator = $this->createTranslator();
-		Assert::same(['cs_CZ', 'en_US', 'sk_SK'], $translator->getAvailableLocales());
-	}
+    public function testAvailableLocales()
+    {
+        $translator = $this->createTranslator();
+        Assert::same(['cs_CZ', 'en_US', 'sk_SK'], $translator->getAvailableLocales());
+    }
 
-	public function dataWhitelistRegexp()
-	{
-		return [
-			['cs', TRUE],
-			['cs_CZ', TRUE],
-			['en', TRUE],
-			['en_US', TRUE],
-			['en_GB', TRUE],
-			['de', TRUE],
-			['fr', FALSE],
-			['hu', FALSE],
-			['eu', FALSE],
-			['ru', FALSE],
-		];
-	}
+    public function dataWhitelistRegexp()
+    {
+        return [
+            ['cs', true],
+            ['cs_CZ', true],
+            ['en', true],
+            ['en_US', true],
+            ['en_GB', true],
+            ['de', true],
+            ['fr', false],
+            ['hu', false],
+            ['eu', false],
+            ['ru', false],
+        ];
+    }
 
-	/**
-	 * @dataProvider dataWhitelistRegexp
-	 */
-	public function testWhitelistRegexp($locale, $isMatching)
-	{
-		$regexp = Translator::buildWhitelistRegexp(['cs', 'en', 'de']);
+    /**
+     * @dataProvider dataWhitelistRegexp
+     */
+    public function testWhitelistRegexp($locale, $isMatching)
+    {
+        $regexp = Translator::buildWhitelistRegexp(['cs', 'en', 'de']);
 
-		Assert::same($isMatching, (bool) preg_match($regexp, $locale));
-	}
+        Assert::same($isMatching, (bool) preg_match($regexp, $locale));
+    }
 
-	public function testNonIdTranslations()
-	{
-		$translator = $this->createTranslator();
-		$translator->setLocale('cs');
+    public function testNonIdTranslations()
+    {
+        $translator = $this->createTranslator();
+        $translator->setLocale('cs');
 
-		Assert::same('Ahoj světe', $translator->translate('Hello World')); // default domain is 'messages'
-	}
+        Assert::same('Ahoj světe', $translator->translate('Hello World')); // default domain is 'messages'
+    }
 
-	public function testAbsoluteTranslations()
-	{
-		$translator = $this->createTranslator();
-		$translator->setLocale('cs');
+    public function testAbsoluteTranslations()
+    {
+        $translator = $this->createTranslator();
+        $translator->setLocale('cs');
 
-		Assert::same('Ahoj světe', $translator->translate('//front.homepage.hello'));
-	}
+        Assert::same('Ahoj světe', $translator->translate('//front.homepage.hello'));
+    }
 
-	public function testTranslatingAbsoluteMessageWithDomainIsNotSupported()
-	{
-		$translator = $this->createTranslator();
+    public function testTranslatingAbsoluteMessageWithDomainIsNotSupported()
+    {
+        $translator = $this->createTranslator();
 
-		Assert::exception(function () use ($translator) {
-			$translator->translate('//homepage.hello', NULL, [], 'front');
-		}, \Kdyby\Translation\InvalidArgumentException::class, 'Providing domain "front" while also having the message "//homepage.hello" absolute is not supported');
-	}
+        Assert::exception(function () use ($translator) {
+            $translator->translate('//homepage.hello', null, [], 'front');
+        }, InvalidArgumentException::class, 'Providing domain "front" while also having the message "//homepage.hello" absolute is not supported');
+    }
 
-	/**
-	 * Reported at https://github.com/Kdyby/Translation/commit/7858654f4e68a932b09e9515996036ac44339362
-	 */
-	public function testBugRemovedUnnecessaryCode()
-	{
-		$translator = $this->createTranslator();
+    /**
+     * Reported at https://github.com/Kdyby/Translation/commit/7858654f4e68a932b09e9515996036ac44339362
+     */
+    public function testBugRemovedUnnecessaryCode()
+    {
+        $translator = $this->createTranslator();
 
-		Assert::same('Hello world', $translator->translate('Hello %value%', ['value' => 'world']));
-	}
+        Assert::same('Hello world', $translator->translate('Hello %value%', ['value' => 'world']));
+    }
 
-	public function testBugMessageWithDotAtTheEnd()
-	{
-		$translator = $this->createTranslator();
-		Assert::same('Hello.', $translator->translate('Hello.'));
-		Assert::same('Hello world.', $translator->translate('Hello world.'));
-	}
+    public function testBugMessageWithDotAtTheEnd()
+    {
+        $translator = $this->createTranslator();
+        Assert::same('Hello.', $translator->translate('Hello.'));
+        Assert::same('Hello world.', $translator->translate('Hello world.'));
+    }
 
 }
 

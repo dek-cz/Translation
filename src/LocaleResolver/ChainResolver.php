@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -12,19 +12,18 @@ namespace Kdyby\Translation\LocaleResolver;
 
 use Kdyby\Translation\IUserLocaleResolver;
 use Kdyby\Translation\Translator;
+use Nette\SmartObject;
 
-class ChainResolver implements \Kdyby\Translation\IUserLocaleResolver
+class ChainResolver implements IUserLocaleResolver
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var array|\Kdyby\Translation\IUserLocaleResolver[]
-     */
+    /** @var array|IUserLocaleResolver[] */
     private $resolvers = [];
 
     /**
-     * @param \Kdyby\Translation\IUserLocaleResolver $resolver
+     * @param IUserLocaleResolver $resolver
      */
     public function addResolver(IUserLocaleResolver $resolver): void
     {
@@ -32,14 +31,14 @@ class ChainResolver implements \Kdyby\Translation\IUserLocaleResolver
     }
 
     /**
-     * @param \Kdyby\Translation\Translator $translator
+     * @param Translator $translator
      * @return string|NULL
      */
     public function resolve(Translator $translator)
     {
         foreach ($this->resolvers as $resolver) {
             $locale = $resolver->resolve($translator);
-            if ($locale !== NULL) {
+            if ($locale !== null) {
                 return $locale;
             }
         }

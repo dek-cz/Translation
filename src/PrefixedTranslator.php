@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -11,36 +11,33 @@
 namespace Kdyby\Translation;
 
 use Latte\Runtime\Template;
+use Nette\SmartObject;
 use Nette\Utils\Strings;
 
-class PrefixedTranslator implements \Kdyby\Translation\ITranslator
+class PrefixedTranslator implements ITranslator
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var \Kdyby\Translation\ITranslator|\Kdyby\Translation\Translator|\Kdyby\Translation\PrefixedTranslator
-     */
+    /** @var ITranslator|Translator|PrefixedTranslator */
     private $translator;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $prefix;
 
     /**
      * @param string $prefix
-     * @param \Kdyby\Translation\ITranslator $translator
-     * @throws \Kdyby\Translation\InvalidArgumentException
+     * @param ITranslator $translator
+     * @throws InvalidArgumentException
      */
     final public function __construct($prefix, ITranslator $translator)
     {
         if (!$translator instanceof Translator && !$translator instanceof PrefixedTranslator) {
-            throw new \Kdyby\Translation\InvalidArgumentException(sprintf(
-                        'The given translator must be instance of %s or %s, bug %s was given',
-                        Translator::class,
-                        self::class,
-                        get_class($translator)
+            throw new InvalidArgumentException(sprintf(
+                'The given translator must be instance of %s or %s, bug %s was given',
+                Translator::class,
+                self::class,
+                get_class($translator)
             ));
         }
 
@@ -53,7 +50,7 @@ class PrefixedTranslator implements \Kdyby\Translation\ITranslator
     }
 
     /**
-     * @param string|\Kdyby\Translation\Phrase $message
+     * @param string|Phrase $message
      * @param array<string|int,string>|string|NULL ...$arg
      * @return string
      */
@@ -62,13 +59,13 @@ class PrefixedTranslator implements \Kdyby\Translation\ITranslator
         $translationString = ($message instanceof Phrase ? $message->message : $message);
         $prefix = $this->prefix . '.';
 
-        $count = isset($arg[0]) ? $arg[0] : NULL;
-        $parameters = isset($arg[1]) ? $arg[1] : [];
-        $domain = isset($arg[2]) ? $arg[2] : NULL;
-        $locale = isset($arg[3]) ? $arg[3] : NULL;
+        $count = $arg[0] ?? null;
+        $parameters = $arg[1] ?? [];
+        $domain = $arg[2] ?? null;
+        $locale = $arg[3] ?? null;
 
         if (Strings::startsWith((string) $message, '//')) {
-            $prefix = NULL;
+            $prefix = null;
             $translationString = Strings::substring($translationString, 2);
         }
 
@@ -80,7 +77,7 @@ class PrefixedTranslator implements \Kdyby\Translation\ITranslator
     }
 
     /**
-     * @return \Kdyby\Translation\ITranslator
+     * @return ITranslator
      */
     public function unwrap()
     {
@@ -88,8 +85,8 @@ class PrefixedTranslator implements \Kdyby\Translation\ITranslator
     }
 
     /**
-     * @param \Latte\Runtime\Template $template
-     * @return \Kdyby\Translation\ITranslator
+     * @param Template $template
+     * @return ITranslator
      */
     public function unregister(Template $template)
     {
@@ -99,10 +96,10 @@ class PrefixedTranslator implements \Kdyby\Translation\ITranslator
     }
 
     /**
-     * @param \Latte\Runtime\Template $template
+     * @param Template $template
      * @param string $prefix
-     * @throws \Kdyby\Translation\InvalidArgumentException
-     * @return \Kdyby\Translation\ITranslator
+     * @throws InvalidArgumentException
+     * @return ITranslator
      */
     public static function register(Template $template, $prefix)
     {

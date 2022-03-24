@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * Test: Kdyby\Translation\Extension.
@@ -8,8 +8,8 @@
 
 namespace KdybyTests\Translation;
 
+use Kdyby\Translation\TranslationLoader;
 use Kdyby\Translation\Translator as KdybyTranslator;
-use Monolog\Handler\TestHandler;
 use Monolog\Logger;
 use Nette\Localization\ITranslator;
 use Symfony\Component\Translation\Translator as SymfonyTranslator;
@@ -17,7 +17,7 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-class ExtensionTest extends \KdybyTests\Translation\TestCase
+class ExtensionTest extends TestCase
 {
 
     public function testFunctionality()
@@ -28,8 +28,8 @@ class ExtensionTest extends \KdybyTests\Translation\TestCase
         Assert::true($translator instanceof KdybyTranslator);
         Assert::true($translator instanceof SymfonyTranslator);
 
-        Assert::same('Ahoj světe', $translator->translate('homepage.hello', NULL, [], 'front', 'cs'));
-        Assert::same('Hello world', $translator->translate('homepage.hello', NULL, [], 'front', 'en'));
+        Assert::same('Ahoj světe', $translator->translate('homepage.hello', null, [], 'front', 'cs'));
+        Assert::same('Hello world', $translator->translate('homepage.hello', null, [], 'front', 'en'));
 
         Assert::same('front.not.found', $translator->translate('front.not.found'));
     }
@@ -38,7 +38,7 @@ class ExtensionTest extends \KdybyTests\Translation\TestCase
     {
         $sl = $this->createContainer('resolvers.default-only');
 
-        /** @var \Kdyby\Translation\Translator $translator */
+        /** @var KdybyTranslator $translator */
         $translator = $sl->getByType(KdybyTranslator::class);
         var_dump($translator->getDefaultLocale());
         Assert::same('cs', $translator->getLocale());
@@ -49,7 +49,7 @@ class ExtensionTest extends \KdybyTests\Translation\TestCase
     {
         $sl = $this->createContainer('loaders.custom');
 
-        /** @var \Kdyby\Translation\TranslationLoader $loader */
+        /** @var TranslationLoader $loader */
         $loader = $sl->getService('translation.loader');
 
         $loaders = $loader->getLoaders();
@@ -66,11 +66,11 @@ class ExtensionTest extends \KdybyTests\Translation\TestCase
         $sl = $this->createContainer('logging');
         $logger = $sl->getService('monolog.logger.translation');
         $loggingHandler = $sl->getService('monolog.logger.translation.handler.0');
-        $translator = $sl->getByType(KdybyTranslator::class); //translation.default 
+        $translator = $sl->getByType(KdybyTranslator::class); //translation.default
         $translator->injectPsrLogger($logger);
         Assert::same('front.not.found', $translator->translate('front.not.found'));
 
-        list($record) = $loggingHandler->getRecords();
+        [$record] = $loggingHandler->getRecords();
         Assert::same('Missing translation', $record['message']);
         Assert::same(Logger::NOTICE, $record['level']);
         Assert::same('translation', $record['channel']);

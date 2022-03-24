@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,9 +10,13 @@
 
 namespace Kdyby\Translation\LocaleResolver;
 
+use Kdyby\Translation\IUserLocaleResolver;
 use Kdyby\Translation\Translator;
 use Nette\Http\IResponse;
 use Nette\Http\Session;
+use Nette\Http\SessionSection;
+use Nette\SmartObject;
+use stdClass;
 
 /**
  * When you don't want to use the param resolver,
@@ -25,29 +29,23 @@ use Nette\Http\Session;
  * Get this class using autowire, but beware, use only Kdyby\Translation\LocaleResolver\SessionResolver,
  * do not try to autowire Kdyby\Translation\IUserLocaleResolver, it will fail.
  */
-class SessionResolver implements \Kdyby\Translation\IUserLocaleResolver
+class SessionResolver implements IUserLocaleResolver
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var \Nette\Http\SessionSection|\stdClass
-     */
+    /** @var SessionSection|stdClass */
     private $localeSession;
 
-    /**
-     * @var \Nette\Http\IResponse
-     */
+    /** @var IResponse */
     private $httpResponse;
 
-    /**
-     * @var \Nette\Http\Session
-     */
+    /** @var Session */
     private $session;
 
     public function __construct(Session $session, IResponse $httpResponse)
     {
-        $this->localeSession = $session->getSection(get_class($this));
+        $this->localeSession = $session->getSection(static::class);
         $this->httpResponse = $httpResponse;
         $this->session = $session;
     }
@@ -55,13 +53,13 @@ class SessionResolver implements \Kdyby\Translation\IUserLocaleResolver
     /**
      * @param string $locale
      */
-    public function setLocale($locale = NULL): void
+    public function setLocale($locale = null): void
     {
         $this->localeSession->locale = $locale;
     }
 
     /**
-     * @param \Kdyby\Translation\Translator $translator
+     * @param Translator $translator
      * @return string|NULL
      */
     public function resolve(Translator $translator)
@@ -72,20 +70,19 @@ class SessionResolver implements \Kdyby\Translation\IUserLocaleResolver
                 'Either start your sessions earlier or disabled the SessionResolver.',
                 E_USER_WARNING
             );
-            return NULL;
+            return null;
         }
 
         if (empty($this->localeSession->locale)) {
-            return NULL;
+            return null;
         }
 
-        $short = array_map(function ($locale)
-        {
+        $short = array_map(function ($locale) {
             return substr($locale, 0, 2);
         }, $translator->getAvailableLocales());
 
-        if (!in_array(substr($this->localeSession->locale, 0, 2), $short, TRUE)) {
-            return NULL;
+        if (!in_array(substr($this->localeSession->locale, 0, 2), $short, true)) {
+            return null;
         }
 
         return $this->localeSession->locale;

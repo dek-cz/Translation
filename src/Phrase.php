@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,42 +10,33 @@
 
 namespace Kdyby\Translation;
 
+use Nette\SmartObject;
+use Throwable;
+
 /**
  * Object wrapper for message that can store default parameters and related information for translation.
  */
 class Phrase
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     public $message;
 
-    /**
-     * @var int|NULL
-     */
+    /** @var int|NULL */
     public $count;
 
-    /**
-     * @var array<string|int,string>
-     */
+    /** @var array<string|int,string> */
     public $parameters;
 
-    /**
-     * @var string|NULL
-     */
+    /** @var string|NULL */
     public $domain;
 
-    /**
-     * @var string|NULL
-     */
+    /** @var string|NULL */
     public $locale;
 
-    /**
-     * @var \Kdyby\Translation\Translator|NULL
-     */
+    /** @var Translator|NULL */
     private $translator;
 
     /**
@@ -55,48 +46,48 @@ class Phrase
      * @param string|NULL $domain
      * @param string|NULL $locale
      */
-    public function __construct($message, $count = NULL, $parameters = NULL, $domain = NULL, $locale = NULL)
+    public function __construct($message, $count = null, $parameters = null, $domain = null, $locale = null)
     {
         $this->message = $message;
 
         if (is_array($count)) {
-            $locale = ($domain !== NULL) ? (string) $domain : NULL;
-            $domain = ($parameters !== NULL) ? (string) (is_array($parameters) ? reset($parameters) : $parameters) : NULL;
+            $locale = ($domain !== null) ? (string) $domain : null;
+            $domain = ($parameters !== null) ? (string) (is_array($parameters) ? reset($parameters) : $parameters) : null;
             $parameters = $count;
-            $count = NULL;
+            $count = null;
         }
 
-        $this->count = $count !== NULL ? (int) $count : NULL;
+        $this->count = $count !== null ? (int) $count : null;
         $this->parameters = (array) $parameters;
         $this->domain = $domain;
         $this->locale = $locale;
     }
 
     /**
-     * @param \Kdyby\Translation\Translator $translator
+     * @param Translator $translator
      * @param int|NULL $count
      * @param array<string|int,string> $parameters
      * @param string|NULL $domain
      * @param string|NULL $locale
      * @return string
      */
-    public function translate(Translator $translator, $count = NULL, array $parameters = [], $domain = NULL, $locale = NULL): string
+    public function translate(Translator $translator, $count = null, array $parameters = [], $domain = null, $locale = null): string
     {
         if (!is_string($this->message)) {
-            throw new \Kdyby\Translation\InvalidStateException('Message is not a string, type ' . gettype($this->message) . ' given.');
+            throw new InvalidStateException('Message is not a string, type ' . gettype($this->message) . ' given.');
         }
 
-        $count = ($count !== NULL) ? (int) $count : $this->count;
+        $count = ($count !== null) ? (int) $count : $this->count;
         $parameters = !empty($parameters) ? $parameters : $this->parameters;
-        $domain = ($domain !== NULL) ? $domain : $this->domain;
-        $locale = ($locale !== NULL) ? $locale : $this->locale;
+        $domain = ($domain !== null) ? $domain : $this->domain;
+        $locale = ($locale !== null) ? $locale : $this->locale;
 
         return $translator->translate($this->message, $count, (array) $parameters, $domain, $locale);
     }
 
     /**
      * @internal
-     * @param \Kdyby\Translation\Translator $translator
+     * @param Translator $translator
      */
     public function setTranslator(Translator $translator): void
     {
@@ -105,20 +96,20 @@ class Phrase
 
     public function __toString()
     {
-        if ($this->translator === NULL) {
+        if ($this->translator === null) {
             return $this->message;
         }
 
         try {
             return (string) $this->translate($this->translator);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);
         }
     }
 
     public function __sleep()
     {
-        $this->translator = NULL;
+        $this->translator = null;
         return ['message', 'count', 'parameters', 'domain', 'locale'];
     }
 

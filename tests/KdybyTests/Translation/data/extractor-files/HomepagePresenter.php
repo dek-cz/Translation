@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -11,44 +11,45 @@
 namespace KdybyTests\Translation;
 
 use Nette\Application\UI\Form;
+use Nette\Application\UI\Presenter;
 use Nette\ComponentModel\IComponent;
 
-class HomepagePresenter extends \Nette\Application\UI\Presenter
+class HomepagePresenter extends Presenter
 {
 
-	/**
-	 * @return \Nette\Application\UI\Form
-	 */
-	protected function createComponent(string $name): ?IComponent
-	{
-		$form = new Form();
-		$form->addProtection('Invalid CSRF token');
-		$form->addError('Nope!');
-		$form->addText('a', $label = NULL, $cols = NULL, $maxLength = NULL);
-		$form->addPassword('b', $label = NULL, $cols = NULL, $maxLength = NULL);
-		$form->addTextArea('c', $label = NULL, $cols = 40, $rows = 10);
-		$form->addUpload('d', $label = NULL)
-			->addError('Yep!');
-		$form->addHidden('e', $default = NULL);
-		$form->addCheckbox('f', $caption = NULL);
-		$form->addRadioList('g', $label = NULL, $items = NULL);
-		$form->addSelect('h', $label = NULL, $items = NULL, $size = NULL);
-		$form->addMultiSelect('i', $label = NULL, $items = NULL, $size = NULL);
-		$form->addSubmit('j', $caption = NULL);
-		$form->addButton('k', $caption);
-		$form->addImage('l', $src = NULL, $alt = NULL)
-			->addCondition($form::EQUAL, 1)
-			->addRule($form::FILLED, 'The image is missing!', 4);
+    /**
+     * @return Form
+     */
+    protected function createComponent(string $name): ?IComponent
+    {
+        $form = new Form();
+        $form->addProtection('Invalid CSRF token');
+        $form->addError('Nope!');
+        $form->addText('a', $label = null, $cols = null, $maxLength = null);
+        $form->addPassword('b', $label = null, $cols = null, $maxLength = null);
+        $form->addTextArea('c', $label = null, $cols = 40, $rows = 10);
+        $form->addUpload('d', $label = null)
+            ->addError('Yep!');
+        $form->addHidden('e', $default = null);
+        $form->addCheckbox('f', $caption = null);
+        $form->addRadioList('g', $label = null, $items = null);
+        $form->addSelect('h', $label = null, $items = null, $size = null);
+        $form->addMultiSelect('i', $label = null, $items = null, $size = null);
+        $form->addSubmit('j', $caption = null);
+        $form->addButton('k', $caption);
+        $form->addImage('l', $src = null, $alt = null)
+            ->addCondition($form::EQUAL, 1)
+            ->addRule($form::FILLED, 'The image is missing!', 4);
 
-		$form->addSubmit('send', 'Submit');
-		$form->onSuccess[] = function (Form $form, $values) {
-			$this->flashMessage('Entry with id %id% was saved', 'warning')
-				->parameters = ['id' => $this->getParameter('id')];
+        $form->addSubmit('send', 'Submit');
+        $form->onSuccess[] = function (Form $form, $values) {
+            $this->flashMessage('Entry with id %id% was saved', 'warning')
+                ->parameters = ['id' => $this->getParameter('id')];
 
-			$this->redirect('list');
-		};
+            $this->redirect('list');
+        };
 
-		return $form;
-	}
+        return $form;
+    }
 
 }

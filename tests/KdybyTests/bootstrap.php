@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -7,14 +7,13 @@
  *
  * For the full copyright and license information, please view the file license.md that was distributed with this source code.
  */
-
 use Tester\Environment;
 use Tester\Helpers;
 use Tracy\Debugger;
 
 if (@!include __DIR__ . '/../../vendor/autoload.php') {
-	echo 'Install Nette Tester using `composer update --dev`';
-	exit(1);
+    echo 'Install Nette Tester using `composer update --dev`';
+    exit(1);
 }
 
 // configure environment
@@ -27,15 +26,15 @@ Helpers::purge(TEMP_DIR);
 Debugger::$logDirectory = TEMP_DIR;
 
 $_SERVER = array_intersect_key($_SERVER, array_flip([
-	'PHP_SELF',
-	'SCRIPT_NAME',
-	'SERVER_ADDR',
-	'SERVER_SOFTWARE',
-	'HTTP_HOST',
-	'DOCUMENT_ROOT',
-	'OS',
-	'argc',
-	'argv',
-]));
+    'PHP_SELF',
+    'SCRIPT_NAME',
+    'SERVER_ADDR',
+    'SERVER_SOFTWARE',
+    'HTTP_HOST',
+    'DOCUMENT_ROOT',
+    'OS',
+    'argc',
+    'argv',
+    ]));
 $_SERVER['REQUEST_TIME'] = 1234567890;
 $_ENV = $_GET = $_POST = [];

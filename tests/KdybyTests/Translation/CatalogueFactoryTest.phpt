@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * Test: Kdyby\Translation\CatalogueFactory.
@@ -14,51 +14,53 @@ use Kdyby\Translation\Loader\NeonFileLoader;
 use Kdyby\Translation\TranslationLoader;
 use Kdyby\Translation\Translator;
 use Mockery;
+use Mockery\MockInterface;
+use Symfony\Component\Translation\MessageCatalogueInterface;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-class CatalogueFactoryTest extends \KdybyTests\Translation\TestCase
+class CatalogueFactoryTest extends TestCase
 {
 
-	public function testCircularFallback()
-	{
-		$fallbacks = new FallbackResolver();
-		$fallbacks->setFallbackLocales(['cs_CZ', 'cs']);
+    public function testCircularFallback()
+    {
+        $fallbacks = new FallbackResolver();
+        $fallbacks->setFallbackLocales(['cs_CZ', 'cs']);
 
-		$loader = new TranslationLoader();
-		$loader->addLoader('neon', new NeonFileLoader());
+        $loader = new TranslationLoader();
+        $loader->addLoader('neon', new NeonFileLoader());
 
-		/** @var \Kdyby\Translation\Translator|\Mockery\MockInterface $translator */
-		$translator = Mockery::mock(Translator::class);
-		$translator->shouldReceive('getAvailableLocales')->andReturn(['cs_CZ', 'en_US']);
+        /** @var Translator|MockInterface $translator */
+        $translator = Mockery::mock(Translator::class);
+        $translator->shouldReceive('getAvailableLocales')->andReturn(['cs_CZ', 'en_US']);
 
-		$factory = new CatalogueFactory($fallbacks, $loader);
-		$factory->addResource('neon', __DIR__ . '/lang/front.cs_CZ.neon', 'cs_CZ', 'front');
-		$factory->addResource('neon', __DIR__ . '/lang/front.en_US.neon', 'en_US', 'front');
+        $factory = new CatalogueFactory($fallbacks, $loader);
+        $factory->addResource('neon', __DIR__ . '/lang/front.cs_CZ.neon', 'cs_CZ', 'front');
+        $factory->addResource('neon', __DIR__ . '/lang/front.en_US.neon', 'en_US', 'front');
 
-		/** @var \Symfony\Component\Translation\MessageCatalogueInterface[] $catalogues */
-		$catalogues = [];
-		$factory->createCatalogue($translator, $catalogues, 'cs');
-		Assert::truthy(isset($catalogues['cs']));
-		Assert::truthy(isset($catalogues['cs_CZ']));
+        /** @var MessageCatalogueInterface[] $catalogues */
+        $catalogues = [];
+        $factory->createCatalogue($translator, $catalogues, 'cs');
+        Assert::truthy(isset($catalogues['cs']));
+        Assert::truthy(isset($catalogues['cs_CZ']));
 
-		Assert::same($catalogues['cs_CZ'], $catalogues['cs']->getFallbackCatalogue());
-		Assert::null($catalogues['cs_CZ']->getFallbackCatalogue());
+        Assert::same($catalogues['cs_CZ'], $catalogues['cs']->getFallbackCatalogue());
+        Assert::null($catalogues['cs_CZ']->getFallbackCatalogue());
 
-		$factory->createCatalogue($translator, $catalogues, 'en');
+        $factory->createCatalogue($translator, $catalogues, 'en');
 
-		Assert::same($catalogues['en_US'], $catalogues['en']->getFallbackCatalogue());
-		Assert::same($catalogues['cs_CZ'], $catalogues['en_US']->getFallbackCatalogue());
+        Assert::same($catalogues['en_US'], $catalogues['en']->getFallbackCatalogue());
+        Assert::same($catalogues['cs_CZ'], $catalogues['en_US']->getFallbackCatalogue());
 
-		Assert::same($catalogues['cs_CZ'], $catalogues['cs']->getFallbackCatalogue());
-		Assert::null($catalogues['cs_CZ']->getFallbackCatalogue());
-	}
+        Assert::same($catalogues['cs_CZ'], $catalogues['cs']->getFallbackCatalogue());
+        Assert::null($catalogues['cs_CZ']->getFallbackCatalogue());
+    }
 
-	protected function tearDown()
-	{
-		Mockery::close();
-	}
+    protected function tearDown()
+    {
+        Mockery::close();
+    }
 
 }
 

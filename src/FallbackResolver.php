@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,14 +10,14 @@
 
 namespace Kdyby\Translation;
 
+use Nette\SmartObject;
+
 class FallbackResolver
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var array<string>
-     */
+    /** @var array<string> */
     private $fallbackLocales = [];
 
     /**
@@ -29,7 +29,6 @@ class FallbackResolver
     }
 
     /**
-     * 
      * @param Translator $translator
      * @param string $locale
      * @return array<string>
@@ -45,7 +44,7 @@ class FallbackResolver
             $locales[] = $fallback;
         }
 
-        if (strrchr($locale, '_') !== FALSE) {
+        if (strrchr($locale, '_') !== false) {
             array_unshift($locales, substr($locale, 0, -strlen(strrchr($locale, '_'))));
         }
 

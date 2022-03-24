@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -13,11 +13,11 @@ namespace Kdyby\Translation\DI;
 interface ITranslationProvider
 {
 
-	/**
-	 * Return array of directories, that contain resources for translator.
-	 *
-	 * @return string[]
-	 */
-	public function getTranslationResources();
+    /**
+     * Return array of directories, that contain resources for translator.
+     *
+     * @return string[]
+     */
+    public function getTranslationResources();
 
 }

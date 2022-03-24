@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -20,12 +20,12 @@ interface IResourceLoader
      * Adds a loader to the translation extractor.
      *
      * @param string $format The format of the loader
-     * @param \Symfony\Component\Translation\Loader\LoaderInterface $loader
+     * @param LoaderInterface $loader
      */
     public function addLoader($format, LoaderInterface $loader): void;
 
     /**
-     * @return array<\Symfony\Component\Translation\Loader\LoaderInterface>
+     * @return array<LoaderInterface>
      */
     public function getLoaders(): array;
 
@@ -33,8 +33,8 @@ interface IResourceLoader
      * @param string $format
      * @param string $resource
      * @param string $domain
-     * @param \Symfony\Component\Translation\MessageCatalogue $catalogue
-     * @throws \Kdyby\Translation\LoaderNotFoundException
+     * @param MessageCatalogue $catalogue
+     * @throws LoaderNotFoundException
      */
     public function loadResource($format, $resource, $domain, MessageCatalogue $catalogue): void;
 

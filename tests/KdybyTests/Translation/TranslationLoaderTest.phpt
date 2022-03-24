@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * Test: Kdyby\Translation\TranslationLoader.
@@ -15,29 +15,29 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-class TranslationLoaderTest extends \KdybyTests\Translation\TestCase
+class TranslationLoaderTest extends TestCase
 {
 
-	public function testAddLoaders()
-	{
-		$loader = new TranslationLoader();
-		Assert::same([], $loader->getLoaders());
+    public function testAddLoaders()
+    {
+        $loader = new TranslationLoader();
+        Assert::same([], $loader->getLoaders());
 
-		$neonLoader = new NeonFileLoader();
-		$loader->addLoader('neon', $neonLoader);
-		Assert::same(['neon' => $neonLoader], $loader->getLoaders());
-	}
+        $neonLoader = new NeonFileLoader();
+        $loader->addLoader('neon', $neonLoader);
+        Assert::same(['neon' => $neonLoader], $loader->getLoaders());
+    }
 
-	public function testLoadResource()
-	{
-		$loader = new TranslationLoader();
-		$loader->addLoader('neon', new NeonFileLoader());
+    public function testLoadResource()
+    {
+        $loader = new TranslationLoader();
+        $loader->addLoader('neon', new NeonFileLoader());
 
-		$catalogue = new MessageCatalogue('cs_CZ');
-		$loader->loadResource('neon', __DIR__ . '/lang/front.cs_CZ.neon', 'front', $catalogue);
+        $catalogue = new MessageCatalogue('cs_CZ');
+        $loader->loadResource('neon', __DIR__ . '/lang/front.cs_CZ.neon', 'front', $catalogue);
 
-		Assert::true($catalogue->defines('homepage.hello', 'front'));
-	}
+        Assert::true($catalogue->defines('homepage.hello', 'front'));
+    }
 
 }
 

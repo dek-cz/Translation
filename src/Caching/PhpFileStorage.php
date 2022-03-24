@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -11,16 +11,16 @@
 namespace Kdyby\Translation\Caching;
 
 use Nette\Caching\Cache;
+use Nette\Caching\IStorage;
+use Nette\Caching\Storages\FileStorage;
 
 /**
  * @internal
  */
-class PhpFileStorage extends \Nette\Caching\Storages\FileStorage implements \Nette\Caching\IStorage
+class PhpFileStorage extends FileStorage implements IStorage
 {
 
-    /**
-     * @var string
-     */
+    /** @var string */
     public $hint;
 
     /**

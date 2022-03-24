@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,23 +10,21 @@
 
 namespace Kdyby\Translation\LocaleResolver;
 
+use Kdyby\Translation\IUserLocaleResolver;
 use Kdyby\Translation\Translator;
 use Nette\Application\Application;
 use Nette\Application\Request;
+use Nette\SmartObject;
 
-class LocaleParamResolver implements \Kdyby\Translation\IUserLocaleResolver
+class LocaleParamResolver implements IUserLocaleResolver
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var \Nette\Application\Request
-     */
+    /** @var Request */
     private $request;
 
-    /**
-     * @var \Kdyby\Translation\Translator
-     */
+    /** @var Translator */
     private $translator;
 
     public function setTranslator(Translator $translator): void
@@ -35,8 +33,8 @@ class LocaleParamResolver implements \Kdyby\Translation\IUserLocaleResolver
     }
 
     /**
-     * @param \Nette\Application\Application $sender
-     * @param \Nette\Application\Request $request
+     * @param Application $sender
+     * @param Request $request
      */
     public function onRequest(Application $sender, Request $request): void
     {
@@ -56,17 +54,17 @@ class LocaleParamResolver implements \Kdyby\Translation\IUserLocaleResolver
     }
 
     /**
-     * @param \Kdyby\Translation\Translator $translator
+     * @param Translator $translator
      * @return string|NULL
      */
     public function resolve(Translator $translator)
     {
-        if ($this->request === NULL) {
-            return NULL;
+        if ($this->request === null) {
+            return null;
         }
 
         $params = $this->request->getParameters();
-        return !empty($params['locale']) ? $params['locale'] : NULL;
+        return !empty($params['locale']) ? $params['locale'] : null;
     }
 
 }

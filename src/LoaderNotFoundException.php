@@ -10,13 +10,9 @@
 
 namespace Kdyby\Translation;
 
-interface IUserLocaleResolver
+use RuntimeException;
+
+class LoaderNotFoundException extends RuntimeException implements Exception
 {
-
-    /**
-     * @param Translator $translator
-     * @return string|NULL
-     */
-    public function resolve(Translator $translator);
-
+    
 }

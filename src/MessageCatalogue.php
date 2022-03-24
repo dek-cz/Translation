@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,10 +10,12 @@
 
 namespace Kdyby\Translation;
 
+use Nette\SmartObject;
+
 class MessageCatalogue extends \Symfony\Component\Translation\MessageCatalogue
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
     /**
      * {@inheritdoc}
@@ -24,7 +26,7 @@ class MessageCatalogue extends \Symfony\Component\Translation\MessageCatalogue
             return parent::get($id, $domain);
         }
 
-        if ($this->getFallbackCatalogue() !== NULL) {
+        if ($this->getFallbackCatalogue() !== null) {
             return $this->getFallbackCatalogue()->get($id, $domain);
         }
 

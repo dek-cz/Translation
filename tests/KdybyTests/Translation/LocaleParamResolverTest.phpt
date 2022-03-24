@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * Test: Kdyby\Translation\LocaleParamResolver.
@@ -15,28 +15,28 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-class LocaleParamResolverTest extends \KdybyTests\Translation\TestCase
+class LocaleParamResolverTest extends TestCase
 {
 
-	public function testInvalidateLocaleOnRequest()
-	{
-		$container = $this->createContainer();
+    public function testInvalidateLocaleOnRequest()
+    {
+        $container = $this->createContainer();
 
-		/** @var \Kdyby\Translation\Translator $translator */
-		$translator = $container->getByType(Translator::class);
+        /** @var Translator $translator */
+        $translator = $container->getByType(Translator::class);
 
-		/** @var \Nette\Application\Application $app */
-		$app = $container->getByType(Application::class);
+        /** @var Application $app */
+        $app = $container->getByType(Application::class);
 
-		// this should fallback to default locale
-		Assert::same('en', $translator->getLocale());
+        // this should fallback to default locale
+        Assert::same('en', $translator->getLocale());
 
-		$app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'cs']));
-		Assert::same('cs', $translator->getLocale());
+        $app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'cs']));
+        Assert::same('cs', $translator->getLocale());
 
-		$app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'en']));
-		Assert::same('en', $translator->getLocale());
-	}
+        $app->onRequest($app, new AppRequest('Test', 'GET', ['action' => 'default', 'locale' => 'en']));
+        Assert::same('en', $translator->getLocale());
+    }
 
 }
 

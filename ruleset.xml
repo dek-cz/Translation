@@ -7,7 +7,7 @@
     <rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
         <properties>
             <property name="rootNamespaces" type="array">
-                <element key="src" value="Kdyby"/>
+                <element key="src" value="Kdyby\Translation"/>
                 <element key="tests" value="KdybyTests"/>
             </property>
         </properties>

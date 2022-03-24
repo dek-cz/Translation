@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -11,15 +11,17 @@
 namespace Kdyby\Translation\Latte;
 
 use Kdyby\Translation\PrefixedTranslator;
+use Latte\CompileException;
 use Latte\Compiler;
-use Latte\Engine;
 use Latte\MacroNode;
+use Latte\Macros\MacroSet;
 use Latte\PhpWriter;
+use Latte\Strict;
 
-class TranslateMacros extends \Latte\Macros\MacroSet
+class TranslateMacros extends MacroSet
 {
 
-    use \Latte\Strict;
+    use Strict;
 
     final public function __construct(Compiler $compiler)
     {
@@ -29,7 +31,7 @@ class TranslateMacros extends \Latte\Macros\MacroSet
     public static function install(Compiler $compiler): self
     {
         $me = new static($compiler);
-        /** @var \Kdyby\Translation\Latte\TranslateMacros $me */
+        /** @var TranslateMacros $me */
         $me->addMacro('_', [$me, 'macroTranslate'], [$me, 'macroTranslate']);
         $me->addMacro('translator', [$me, 'macroDomain'], [$me, 'macroDomain']);
 
@@ -45,49 +47,52 @@ class TranslateMacros extends \Latte\Macros\MacroSet
     public function macroTranslate(MacroNode $node, PhpWriter $writer): string
     {
         if ($node->closing) {
-            if (strpos($node->content, '<?php') === FALSE) {
-                $value = var_export($node->content, TRUE);
+            if (strpos($node->content, '<?php') === false) {
+                $value = var_export($node->content, true);
                 $node->content = '';
             } else {
                 $node->openingCode = '<?php ob_start(function () {}) ?>' . $node->openingCode;
                 $value = 'ob_get_clean()';
             }
+
             return $writer->write('$ʟ_fi = new LR\FilterInfo(%var); echo %modifyContent($this->filters->filterContent("translate", $ʟ_fi, %raw))', $node->context[0], $value);
         } elseif ($node->args !== '') {
-            $node->empty = TRUE;
+            $node->empty = true;
             if ($this->containsOnlyOneWord($node)) {
                 return $writer->write('echo %modify(call_user_func($this->filters->translate, %node.word))');
             } else {
                 return $writer->write('echo %modify(call_user_func($this->filters->translate, %node.word, %node.args))');
             }
         }
+
         return '';
     }
 
     /**
-     * @param \Latte\MacroNode $node
-     * @param \Latte\PhpWriter $writer
-     * @throws \Latte\CompileException for invalid domain
+     * @param MacroNode $node
+     * @param PhpWriter $writer
+     * @throws CompileException for invalid domain
      * @return string|NULL
      */
     public function macroDomain(MacroNode $node, PhpWriter $writer): ?string
     {
         if ($node->closing) {
-            if ($node->content !== NULL && $node->content !== '') {
+            if ($node->content !== null && $node->content !== '') {
                 return $writer->write('$_translator->unregister($this);');
             }
         } else {
             if ($node->empty) {
-                throw new \Latte\CompileException('Expected message prefix, none given');
+                throw new CompileException('Expected message prefix, none given');
             }
 
             return $writer->write('$_translator = ' . PrefixedTranslator::class . '::register($this, %node.word);');
         }
+
         return null;
     }
 
     /**
-     * @param \Latte\MacroNode $node
+     * @param MacroNode $node
      * @return bool
      */
     private function containsOnlyOneWord(MacroNode $node): bool

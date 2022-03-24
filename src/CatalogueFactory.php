@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,26 +10,22 @@
 
 namespace Kdyby\Translation;
 
-use Kdyby;
+use Nette\SmartObject;
+use Symfony\Component\Translation\Exception\NotFoundResourceException;
+use Symfony\Component\Translation\MessageCatalogueInterface;
 
 class CatalogueFactory
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var \Kdyby\Translation\FallbackResolver
-     */
+    /** @var FallbackResolver */
     private $fallbackResolver;
 
-    /**
-     * @var \Kdyby\Translation\IResourceLoader
-     */
+    /** @var IResourceLoader */
     private $loader;
 
-    /**
-     * @var array <string, array<int, array<int, string>|string>>
-     */
+    /** @var array <string, array<int, array<int, string>|string>> */
     private $resources = [];
 
     public function __construct(FallbackResolver $fallbackResolver, IResourceLoader $loader)
@@ -54,7 +50,7 @@ class CatalogueFactory
     public function getResources(): array
     {
         $list = [];
-        foreach ($this->resources as $locale => $resources) {
+        foreach (array_values($this->resources) as $resources) {
             foreach ($resources as $meta) {
                 $list[] = $meta[1]; // resource file
             }
@@ -64,17 +60,17 @@ class CatalogueFactory
     }
 
     /**
-     * @param \Kdyby\Translation\Translator $translator
-     * @param \Symfony\Component\Translation\MessageCatalogueInterface[] $availableCatalogues
+     * @param Translator $translator
+     * @param MessageCatalogueInterface[] $availableCatalogues
      * @param string $locale
-     * @throws \Symfony\Component\Translation\Exception\NotFoundResourceException
-     * @return \Symfony\Component\Translation\MessageCatalogueInterface
+     * @throws NotFoundResourceException
+     * @return MessageCatalogueInterface
      */
-    public function createCatalogue(Translator $translator, array &$availableCatalogues, $locale): \Symfony\Component\Translation\MessageCatalogueInterface
+    public function createCatalogue(Translator $translator, array &$availableCatalogues, $locale): MessageCatalogueInterface
     {
         try {
             $this->doLoadCatalogue($availableCatalogues, $locale);
-        } catch (\Symfony\Component\Translation\Exception\NotFoundResourceException $e) {
+        } catch (NotFoundResourceException $e) {
             if (!$this->fallbackResolver->compute($translator, $locale)) {
                 throw $e;
             }
@@ -82,7 +78,7 @@ class CatalogueFactory
 
         $current = $availableCatalogues[$locale];
 
-        $chain = [$locale => TRUE];
+        $chain = [$locale => true];
         foreach ($this->fallbackResolver->compute($translator, $locale) as $fallback) {
             if (!isset($availableCatalogues[$fallback])) {
                 $this->doLoadCatalogue($availableCatalogues, $fallback);
@@ -90,20 +86,19 @@ class CatalogueFactory
 
             $newFallback = $availableCatalogues[$fallback];
             $newFallbackFallback = $newFallback->getFallbackCatalogue();
-            if ($newFallbackFallback !== NULL && isset($chain[$newFallbackFallback->getLocale()])) {
+            if ($newFallbackFallback !== null && isset($chain[$newFallbackFallback->getLocale()])) {
                 break;
             }
 
             $current->addFallbackCatalogue($newFallback);
             $current = $newFallback;
-            $chain[$fallback] = TRUE;
+            $chain[$fallback] = true;
         }
 
         return $availableCatalogues[$locale];
     }
 
     /**
-     * 
      * @param array<string, MessageCatalogue> $availableCatalogues
      * @param ?string $locale
      * @return MessageCatalogue

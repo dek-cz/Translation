@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -11,15 +11,17 @@
 namespace Kdyby\Translation\Dumper;
 
 use Nette\Neon\Neon;
+use Nette\SmartObject;
+use Symfony\Component\Translation\Dumper\FileDumper;
 use Symfony\Component\Translation\MessageCatalogue;
 
 /**
  * Generates Neon files from a message catalogue.
  */
-class NeonFileDumper extends \Symfony\Component\Translation\Dumper\FileDumper
+class NeonFileDumper extends FileDumper
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
     /**
      * Transforms a domain of a message catalogue to its string representation.

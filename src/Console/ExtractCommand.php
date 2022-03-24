@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -11,53 +11,42 @@
 namespace Kdyby\Translation\Console;
 
 use Kdyby\Translation\MessageCatalogue;
+use Nette\DI\Container;
 use Nette\DI\Helpers;
+use Nette\SmartObject;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Translation\Extractor\ChainExtractor;
 use Symfony\Component\Translation\Writer\TranslationWriter;
 
-class ExtractCommand extends \Symfony\Component\Console\Command\Command
+class ExtractCommand extends Command
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
     protected static $defaultName = 'kdyby:translation-extract';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     public $defaultOutputDir = '%appDir%/lang';
 
-    /**
-     * @var \Symfony\Component\Translation\Writer\TranslationWriter
-     */
+    /** @var TranslationWriter */
     private $writer;
 
-    /**
-     * @var \Symfony\Component\Translation\Extractor\ChainExtractor
-     */
+    /** @var ChainExtractor */
     private $extractor;
 
-    /**
-     * @var \Nette\DI\Container
-     */
+    /** @var Container */
     private $serviceLocator;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $outputFormat;
 
-    /**
-     * @var array<mixed>
-     */
+    /** @var array<mixed> */
     private $scanDirs;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $outputDir;
 
     protected function configure(): void
@@ -72,7 +61,7 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        /** @var \Nette\DI\Container $container */
+        /** @var Container $container */
         $container = $this->getHelper('container');
         $this->writer = $container->getByType(TranslationWriter::class);
         $this->extractor = $container->getByType(ChainExtractor::class);
@@ -80,7 +69,6 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
     }
 
     /**
-     * 
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return bool
@@ -90,12 +78,13 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
         /** @var string $of */
         $of = $input->getOption('output-format') ?: '';
         $this->outputFormat = trim($of, '=');
-        if (!in_array($this->outputFormat, $this->writer->getFormats(), TRUE)) {
+        if (!in_array($this->outputFormat, $this->writer->getFormats(), true)) {
             $output->writeln('<error>Unknown --output-format</error>');
             $output->writeln(sprintf('<info>Choose one of: %s</info>', implode(', ', $this->writer->getFormats())));
 
-            return FALSE;
+            return false;
         }
+
         /** @var string $sdir */
         $sdir = $input->getOption('scan-dir') ?: '';
         $this->scanDirs = (array) Helpers::expand($sdir, $this->serviceLocator->parameters);
@@ -103,9 +92,10 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
             if (!is_dir(is_string($dir) ? $dir : '')) {
                 $output->writeln(sprintf('<error>Given --scan-dir "%s" does not exists.</error>', is_string($dir) ? $dir : ''));
 
-                return FALSE;
+                return false;
             }
         }
+
         /** @var string $odir */
         $odir = $input->getOption('output-dir') ?: '';
         $tmp = Helpers::expand($odir, $this->serviceLocator->parameters);
@@ -113,17 +103,18 @@ class ExtractCommand extends \Symfony\Component\Console\Command\Command
         if (!is_dir($this->outputDir) || !is_writable($this->outputDir)) {
             $output->writeln(sprintf('<error>Given --output-dir "%s" does not exists or is not writable.</error>', $this->outputDir));
 
-            return FALSE;
+            return false;
         }
 
-        return TRUE;
+        return true;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($this->validate($input, $output) !== TRUE) {
+        if ($this->validate($input, $output) !== true) {
             return 1;
         }
+
         $cl = $input->getOption('catalogue-language');
         $catalogue = new MessageCatalogue(is_string($cl) ? $cl : '');
         foreach ($this->scanDirs as $dir) {

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -12,74 +12,58 @@ namespace Kdyby\Translation;
 
 use Kdyby\Translation\Diagnostics\Panel;
 use Latte\Runtime\IHtmlString as LatteHtmlString;
+use Locale;
+use Nette\SmartObject;
 use Nette\Utils\IHtmlString as NetteHtmlString;
 use Nette\Utils\Strings;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Translation\Exception\LogicException;
 use Symfony\Component\Translation\Formatter\ChoiceMessageFormatterInterface;
 use Symfony\Component\Translation\Formatter\MessageFormatterInterface;
 use Symfony\Component\Translation\Loader\LoaderInterface;
+use Throwable;
 
-class Translator extends \Symfony\Component\Translation\Translator implements \Kdyby\Translation\ITranslator
+class Translator extends \Symfony\Component\Translation\Translator implements ITranslator
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var \Kdyby\Translation\IUserLocaleResolver
-     */
+    /** @var IUserLocaleResolver */
     private $localeResolver;
 
-    /**
-     * @var \Kdyby\Translation\CatalogueCompiler
-     */
+    /** @var CatalogueCompiler */
     private $catalogueCompiler;
 
-    /**
-     * @var \Kdyby\Translation\FallbackResolver
-     */
+    /** @var FallbackResolver */
     private $fallbackResolver;
 
-    /**
-     * @var \Kdyby\Translation\IResourceLoader
-     */
+    /** @var IResourceLoader */
     private $translationsLoader;
 
-    /**
-     * @var \Psr\Log\LoggerInterface|NULL
-     */
+    /** @var LoggerInterface|NULL */
     private $psrLogger;
 
-    /**
-     * @var \Kdyby\Translation\Diagnostics\Panel|NULL
-     */
+    /** @var Panel|NULL */
     private $panel;
 
-    /**
-     * @var array<string,bool>
-     */
+    /** @var array<string,bool> */
     private $availableResourceLocales = [];
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $defaultLocale;
 
-    /**
-     * @var string|NULL
-     */
+    /** @var string|NULL */
     private $localeWhitelist;
 
-    /**
-     * @var \Symfony\Component\Translation\Formatter\MessageFormatterInterface
-     */
+    /** @var MessageFormatterInterface */
     private $formatter;
 
     /**
-     * @param \Kdyby\Translation\IUserLocaleResolver $localeResolver
-     * @param \Symfony\Component\Translation\Formatter\MessageFormatterInterface $formatter
-     * @param \Kdyby\Translation\CatalogueCompiler $catalogueCompiler
-     * @param \Kdyby\Translation\FallbackResolver $fallbackResolver
-     * @param \Kdyby\Translation\IResourceLoader $loader
+     * @param IUserLocaleResolver $localeResolver
+     * @param MessageFormatterInterface $formatter
+     * @param CatalogueCompiler $catalogueCompiler
+     * @param FallbackResolver $fallbackResolver
+     * @param IResourceLoader $loader
      * @throws \InvalidArgumentException
      */
     public function __construct(
@@ -101,7 +85,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
 
     /**
      * @internal
-     * @param \Kdyby\Translation\Diagnostics\Panel $panel
+     * @param Panel $panel
      */
     public function injectPanel(Panel $panel): void
     {
@@ -109,9 +93,9 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
     }
 
     /**
-     * @param \Psr\Log\LoggerInterface|NULL $logger
+     * @param LoggerInterface|NULL $logger
      */
-    public function injectPsrLogger(LoggerInterface $logger = NULL): void
+    public function injectPsrLogger(?LoggerInterface $logger = null): void
     {
         $this->psrLogger = $logger;
     }
@@ -119,7 +103,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
     /**
      * Translates the given string.
      *
-     * @param string|\Kdyby\Translation\Phrase|mixed $message The message id
+     * @param string|Phrase|mixed $message The message id
      * @param array<string|int,string>|string|int|NULL ...$arg An array of parameters for the message
      * @throws \InvalidArgumentException
      * @return string
@@ -130,16 +114,16 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
             return $message->translate($this);
         }
 
-        $count = isset($arg[0]) ? $arg[0] : NULL;
-        $parameters = isset($arg[1]) ? $arg[1] : [];
-        $domain = isset($arg[2]) ? $arg[2] : NULL;
-        $locale = isset($arg[3]) ? $arg[3] : NULL;
+        $count = $arg[0] ?? null;
+        $parameters = $arg[1] ?? [];
+        $domain = $arg[2] ?? null;
+        $locale = $arg[3] ?? null;
 
         if (is_array($count)) {
-            $locale = ($domain !== NULL) ? (string) (is_array($domain) ? reset($domain) : $domain) : NULL;
-            $domain = ($parameters !== NULL && !empty($parameters)) ? (string) (is_array($parameters) ? reset($parameters) : $parameters) : NULL;
+            $locale = ($domain !== null) ? (string) (is_array($domain) ? reset($domain) : $domain) : null;
+            $domain = ($parameters !== null && !empty($parameters)) ? (string) (is_array($parameters) ? reset($parameters) : $parameters) : null;
             $parameters = $count;
-            $count = NULL;
+            $count = null;
         }
 
         if (empty($message)) {
@@ -152,53 +136,56 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
         }
 
         if (!is_string($message)) {
-            throw new \Kdyby\Translation\InvalidArgumentException(sprintf('Message id must be a string, %s was given', gettype($message)));
+            throw new InvalidArgumentException(sprintf('Message id must be a string, %s was given', gettype($message)));
         }
 
         if (Strings::startsWith($message, '//')) {
-            if ($domain !== NULL) {
-                throw new \Kdyby\Translation\InvalidArgumentException(sprintf(
-                            'Providing domain "%s" while also having the message "%s" absolute is not supported',
-                            (is_array($domain) ? reset($domain) : $domain),
-                            $message
+            if ($domain !== null) {
+                throw new InvalidArgumentException(sprintf(
+                    'Providing domain "%s" while also having the message "%s" absolute is not supported',
+                    (is_array($domain) ? reset($domain) : $domain),
+                    $message
                 ));
             }
 
             $message = Strings::substring($message, 2);
         }
+
         $parameters = is_array($parameters) ? $parameters : [];
         $tmp = [];
         foreach ($parameters as $key => $val) {
             $tmp['%' . trim((string) $key, '%') . '%'] = $val;
         }
+
         $parameters = $tmp;
 
-        if ($count !== NULL && is_scalar($count)) {
-            return $this->transChoice($message, (int) $count, $parameters + ['%count%' => (string) $count], (is_string($domain) || is_null($domain) ? $domain : null), (is_string($locale) || is_null($locale) ? $locale : null));
+        if ($count !== null && is_scalar($count)) {
+            return $this->transChoice($message, (int) $count, $parameters + ['%count%' => (string) $count], (is_string($domain) || $domain === null ? $domain : null), (is_string($locale) || $locale === null ? $locale : null));
         }
 
-        return $this->trans($message, $parameters, (is_string($domain) || is_null($domain) ? $domain : null), (is_string($locale) || is_null($locale) ? $locale : null));
+        return $this->trans($message, $parameters, (is_string($domain) || $domain === null ? $domain : null), (is_string($locale) || $locale === null ? $locale : null));
     }
 
     /**
      * {@inheritdoc}
+     *
      * @param int|string $message
      * @param array<string|int,string> $parameters
      * @param ?string $domain
      * @param ?string $locale
      */
-    public function trans($message, array $parameters = [], $domain = NULL, $locale = NULL): string
+    public function trans($message, array $parameters = [], $domain = null, $locale = null): string
     {
         if (is_int($message)) {
             $message = (string) $message;
         }
 
         if (!is_string($message)) {
-            throw new \Kdyby\Translation\InvalidArgumentException(sprintf('Message id must be a string, %s was given', gettype($message)));
+            throw new InvalidArgumentException(sprintf('Message id must be a string, %s was given', gettype($message)));
         }
 
-        if ($domain === NULL) {
-            list($domain, $id) = $this->extractMessageDomain($message);
+        if ($domain === null) {
+            [$domain, $id] = $this->extractMessageDomain($message);
         } else {
             $id = $message;
         }
@@ -214,48 +201,50 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
 
     /**
      * {@inheritdoc}
+     *
      * @param int|string $message
      * @param array<string|int,string> $parameters
      * @param ?string $domain
      * @param ?string $locale
      */
-    public function transChoice($message, $number, array $parameters = [], $domain = NULL, $locale = NULL): string
+    public function transChoice($message, $number, array $parameters = [], $domain = null, $locale = null): string
     {
         if (is_int($message)) {
             $message = (string) $message;
         }
 
         if (!is_string($message)) {
-            throw new \Kdyby\Translation\InvalidArgumentException(sprintf('Message id must be a string, %s was given', gettype($message)));
+            throw new InvalidArgumentException(sprintf('Message id must be a string, %s was given', gettype($message)));
         }
 
-        if ($domain === NULL) {
-            list($domain, $id) = $this->extractMessageDomain($message);
+        if ($domain === null) {
+            [$domain, $id] = $this->extractMessageDomain($message);
         } else {
             $id = $message;
         }
 
         try {
             $result = parent::transChoice($id, $number, $parameters, $domain, $locale);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $result = $id;
-            if ($this->panel !== NULL) {
+            if ($this->panel !== null) {
                 $this->panel->choiceError($e, $domain);
             }
         }
 
         if ($result === "\x01") {
             $this->logMissingTranslation($message, $domain, $locale);
-            if ($locale === NULL) {
+            if ($locale === null) {
                 $locale = $this->getLocale();
             }
-            if ($locale === NULL) {
+
+            if ($locale === null) {
                 $result = strtr($message, $parameters);
             } else {
                 if (!$this->formatter instanceof ChoiceMessageFormatterInterface) {
                     $result = $id;
-                    if ($this->panel !== NULL) {
-                        $this->panel->choiceError(new \Symfony\Component\Translation\Exception\LogicException(sprintf('The formatter "%s" does not support plural translations.', get_class($this->formatter))), $domain);
+                    if ($this->panel !== null) {
+                        $this->panel->choiceError(new LogicException(sprintf('The formatter "%s" does not support plural translations.', get_class($this->formatter))), $domain);
                     }
                 } else {
                     $result = $this->formatter->choiceFormat($message, (int) $number, $locale, $parameters);
@@ -268,7 +257,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
 
     /**
      * @param string $format
-     * @param \Symfony\Component\Translation\Loader\LoaderInterface $loader
+     * @param LoaderInterface $loader
      */
     public function addLoader($format, LoaderInterface $loader): void
     {
@@ -277,7 +266,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
     }
 
     /**
-     * @return \Symfony\Component\Translation\Loader\LoaderInterface[]
+     * @return LoaderInterface[]
      */
     protected function getLoaders()
     {
@@ -287,38 +276,41 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
     /**
      * @param array<string> $whitelist
      */
-    public function setLocaleWhitelist(array $whitelist = NULL): void
+    public function setLocaleWhitelist(?array $whitelist = null): void
     {
         $this->localeWhitelist = self::buildWhitelistRegexp($whitelist);
     }
 
     /**
      * {@inheritdoc}
+     *
      * @param string|NULL $format
      * @param string $resource
      * @param string|NULL $locale
      * @param string|NULL $domain
      */
-    public function addResource($format, $resource, $locale, $domain = NULL): void
+    public function addResource($format, $resource, $locale, $domain = null): void
     {
-        if ($this->localeWhitelist !== NULL && !preg_match($this->localeWhitelist, $locale ?? '')) {
-            if ($this->panel !== NULL) {
+        if ($this->localeWhitelist !== null && !preg_match($this->localeWhitelist, $locale ?? '')) {
+            if ($this->panel !== null) {
                 $this->panel->addIgnoredResource($format, $resource, $locale ?? '', $domain);
             }
+
             return;
         }
 
         parent::addResource($format ?? '', $resource, $locale ?? '', $domain);
         $this->catalogueCompiler->addResource($format ?? '', $resource, $locale ?? '', $domain);
-        $this->availableResourceLocales[$locale] = TRUE;
+        $this->availableResourceLocales[$locale] = true;
 
-        if ($this->panel !== NULL) {
+        if ($this->panel !== null) {
             $this->panel->addResource($format, $resource, $locale ?? '', $domain);
         }
     }
 
     /**
      * {@inheritdoc}
+     *
      * @param array<string> $locales
      */
     public function setFallbackLocales(array $locales): void
@@ -357,7 +349,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
      */
     public function getLocale()
     {
-        if (empty(parent::getLocale()) || (class_exists(\Locale::class) && parent::getLocale() === \Locale::getDefault())) {
+        if (empty(parent::getLocale()) || (class_exists(Locale::class) && parent::getLocale() === Locale::getDefault())) {
             $this->setLocale($this->localeResolver->resolve($this));
         }
 
@@ -374,7 +366,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
 
     /**
      * @param string $locale
-     * @return \Kdyby\Translation\Translator
+     * @return Translator
      */
     public function setDefaultLocale($locale): self
     {
@@ -385,7 +377,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
 
     /**
      * @param string $messagePrefix
-     * @return \Kdyby\Translation\ITranslator
+     * @return ITranslator
      */
     public function domain($messagePrefix)
     {
@@ -393,7 +385,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
     }
 
     /**
-     * @return \Kdyby\Translation\TemplateHelpers
+     * @return TemplateHelpers
      */
     public function createTemplateHelpers()
     {
@@ -402,12 +394,13 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
 
     /**
      * {@inheritdoc}
+     *
      * @param string $locale
      */
     protected function loadCatalogue($locale): void
     {
         if (empty($locale)) {
-            throw new \Kdyby\Translation\InvalidArgumentException('Invalid locale.');
+            throw new InvalidArgumentException('Invalid locale.');
         }
 
         if (isset($this->catalogues[$locale])) {
@@ -419,6 +412,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
 
     /**
      * {@inheritdoc}
+     *
      * @param string $locale
      * @return array<string>
      */
@@ -446,8 +440,8 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
      */
     private function extractMessageDomain($message): array
     {
-        if (strpos(substr($message, 0, -1), '.') !== FALSE && strpos($message, ' ') === FALSE) {
-            list($domain, $message) = explode('.', $message, 2);
+        if (strpos(substr($message, 0, -1), '.') !== false && strpos($message, ' ') === false) {
+            [$domain, $message] = explode('.', $message, 2);
         } else {
             $domain = 'messages';
         }
@@ -462,11 +456,11 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
      */
     protected function logMissingTranslation($message, $domain, $locale): void
     {
-        if ($message === NULL) {
+        if ($message === null) {
             return;
         }
 
-        if ($this->psrLogger !== NULL) {
+        if ($this->psrLogger !== null) {
             $this->psrLogger->notice('Missing translation', [
                 'message' => $message,
                 'domain' => $domain,
@@ -474,18 +468,18 @@ class Translator extends \Symfony\Component\Translation\Translator implements \K
             ]);
         }
 
-        if ($this->panel !== NULL) {
+        if ($this->panel !== null) {
             $this->panel->markUntranslated($message, $domain);
         }
     }
 
     /**
      * @param array<string>|NULL $whitelist
-     * @return null|string
+     * @return string|null
      */
     public static function buildWhitelistRegexp($whitelist)
     {
-        return ($whitelist !== NULL) ? '~^(' . implode('|', $whitelist) . ')~i' : NULL;
+        return ($whitelist !== null) ? '~^(' . implode('|', $whitelist) . ')~i' : null;
     }
 
 }

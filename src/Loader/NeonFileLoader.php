@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -10,13 +10,18 @@
 
 namespace Kdyby\Translation\Loader;
 
+use Nette\Neon\Exception;
 use Nette\Neon\Neon;
 use Symfony\Component\Config\Resource\FileResource;
+use Symfony\Component\Translation\Exception\InvalidResourceException;
+use Symfony\Component\Translation\Exception\NotFoundResourceException;
+use Symfony\Component\Translation\Loader\ArrayLoader;
+use Symfony\Component\Translation\Loader\LoaderInterface;
 
 /**
  * Loads translations from Neon files.
  */
-class NeonFileLoader extends \Symfony\Component\Translation\Loader\ArrayLoader implements \Symfony\Component\Translation\Loader\LoaderInterface
+class NeonFileLoader extends ArrayLoader implements LoaderInterface
 {
 
     /**
@@ -24,25 +29,25 @@ class NeonFileLoader extends \Symfony\Component\Translation\Loader\ArrayLoader i
      */
     public function load($resource, $locale, $domain = 'messages')
     {
-
         if (!is_string($resource) && is_resource($resource)) {
             $meta = stream_get_meta_data($resource);
             $resource = $meta['uri'];
         }
+
         $resource = is_string($resource) ? $resource : '';
         if (!stream_is_local($resource)) {
-            throw new \Symfony\Component\Translation\Exception\InvalidResourceException(sprintf('This is not a local file "%s".', $resource));
+            throw new InvalidResourceException(sprintf('This is not a local file "%s".', $resource));
         }
 
         if (!file_exists($resource)) {
-            throw new \Symfony\Component\Translation\Exception\NotFoundResourceException(sprintf('File "%s" not found.', $resource));
+            throw new NotFoundResourceException(sprintf('File "%s" not found.', $resource));
         }
 
         try {
             $content = file_get_contents($resource);
             $messages = Neon::decode($content === false ? '' : $content);
-        } catch (\Nette\Neon\Exception $e) {
-            throw new \Symfony\Component\Translation\Exception\InvalidResourceException(sprintf('Error parsing Neon: %s', $e->getMessage()), 0, $e);
+        } catch (Exception $e) {
+            throw new InvalidResourceException(sprintf('Error parsing Neon: %s', $e->getMessage()), 0, $e);
         }
 
         if (empty($messages)) {
@@ -50,7 +55,7 @@ class NeonFileLoader extends \Symfony\Component\Translation\Loader\ArrayLoader i
         }
 
         if (!is_array($messages)) {
-            throw new \Symfony\Component\Translation\Exception\InvalidResourceException(sprintf('The file "%s" must contain a Neon array.', $resource));
+            throw new InvalidResourceException(sprintf('The file "%s" must contain a Neon array.', $resource));
         }
 
         $catalogue = parent::load($messages, $locale, $domain);

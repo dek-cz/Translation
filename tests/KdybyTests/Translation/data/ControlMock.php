@@ -1,8 +1,10 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace KdybyTests\Translation;
 
-class ControlMock extends \Nette\Application\UI\Control
-{
+use Nette\Application\UI\Control;
 
+class ControlMock extends Control
+{
+    
 }

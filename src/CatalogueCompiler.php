@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -16,25 +16,21 @@ use Nette\Caching\IStorage;
 use Nette\Caching\Storages\MemoryStorage;
 use Nette\PhpGenerator\Helpers as GeneratorHelpers;
 use Nette\PhpGenerator\PhpLiteral;
+use Nette\SmartObject;
+use Symfony\Component\Translation\MessageCatalogueInterface;
 
 class CatalogueCompiler
 {
 
-    use \Nette\SmartObject;
+    use SmartObject;
 
-    /**
-     * @var \Nette\Caching\Cache
-     */
+    /** @var Cache */
     private $cache;
 
-    /**
-     * @var \Kdyby\Translation\FallbackResolver
-     */
+    /** @var FallbackResolver */
     private $fallbackResolver;
 
-    /**
-     * @var \Kdyby\Translation\CatalogueFactory
-     */
+    /** @var CatalogueFactory */
     private $catalogueFactory;
 
     public function __construct(
@@ -58,7 +54,7 @@ class CatalogueCompiler
 
     public function invalidateCache(): void
     {
-        $this->cache->clean([Cache::ALL => TRUE]);
+        $this->cache->clean([Cache::ALL => true]);
     }
 
     /**
@@ -67,34 +63,35 @@ class CatalogueCompiler
      * @param string $locale
      * @param ?string $domain
      */
-    public function addResource(string $format, string $resource, string $locale, ?string $domain = NULL): void
+    public function addResource(string $format, string $resource, string $locale, ?string $domain = null): void
     {
         $this->catalogueFactory->addResource($format, $resource, $locale, $domain);
     }
 
     /**
-     * @param \Kdyby\Translation\Translator $translator
-     * @param \Symfony\Component\Translation\MessageCatalogueInterface[] $availableCatalogues
+     * @param Translator $translator
+     * @param MessageCatalogueInterface[] $availableCatalogues
      * @param string $locale
-     * @throws \Kdyby\Translation\InvalidArgumentException
-     * @return \Symfony\Component\Translation\MessageCatalogueInterface[]
+     * @throws InvalidArgumentException
+     * @return MessageCatalogueInterface[]
      */
     public function compile(Translator $translator, array &$availableCatalogues, $locale)
     {
         if (empty($locale)) {
-            throw new \Kdyby\Translation\InvalidArgumentException('Invalid locale');
+            throw new InvalidArgumentException('Invalid locale');
         }
 
         if (isset($availableCatalogues[$locale])) {
             return $availableCatalogues;
         }
+
         $cacheKey = [$locale, $translator->getFallbackLocales()];
 
         $storage = $this->cache->getStorage();
         if (!$storage instanceof PhpFileStorage) {
             /** @var ?array<string,string> $messages */
             $messages = $this->cache->load($cacheKey);
-            if ($messages !== NULL) {
+            if ($messages !== null) {
                 $availableCatalogues[$locale] = new MessageCatalogue($locale, $messages);
                 return $availableCatalogues;
             }
@@ -107,21 +104,23 @@ class CatalogueCompiler
         $storage->hint = $locale;
         /** @var ?array<string,string> $cached */
         $cached = $compiled = $this->cache->load($cacheKey);
-        if ($compiled === NULL) {
+        if ($compiled === null) {
             $this->catalogueFactory->createCatalogue($translator, $availableCatalogues, $locale);
             $this->cache->save($cacheKey, $compiled = $this->compilePhpCache($translator, $availableCatalogues, $locale));
             /** @var array<string,string> $cached */
             $cached = $this->cache->load($cacheKey);
         }
+
         if (isset($cached['file'])) {
             $availableCatalogues[$locale] = self::load($cached['file']);
         }
+
         return $availableCatalogues;
     }
 
     /**
-     * @param \Kdyby\Translation\Translator $translator
-     * @param \Symfony\Component\Translation\MessageCatalogueInterface[] $availableCatalogues
+     * @param Translator $translator
+     * @param MessageCatalogueInterface[] $availableCatalogues
      * @param string $locale
      * @return string
      */
@@ -133,31 +132,29 @@ class CatalogueCompiler
             $fback = preg_replace('~[^a-z0-9_]~i', '_', $fallback) ?: '';
             $fallbackSuffix = new PhpLiteral(ucfirst($fback));
 
-            $fallbackContent .= GeneratorHelpers::format(<<<EOF
-\$catalogue? = new MessageCatalogue(?, ?);
-\$catalogue?->addFallbackCatalogue(\$catalogue?);
+            $fallbackContent .= GeneratorHelpers::format('
+$catalogue? = new MessageCatalogue(?, ?);
+$catalogue?->addFallbackCatalogue($catalogue?);
 
-EOF
-                    , $fallbackSuffix, $fallback, $availableCatalogues[$fallback]->all(), $current, $fallbackSuffix);
+', $fallbackSuffix, $fallback, $availableCatalogues[$fallback]->all(), $current, $fallbackSuffix);
             $current = $fallbackSuffix;
         }
 
-        $content = GeneratorHelpers::format(<<<EOF
-use Kdyby\\Translation\\MessageCatalogue;
+        $content = GeneratorHelpers::format('
+use Kdyby\Translation\MessageCatalogue;
 
-\$catalogue = new MessageCatalogue(?, ?);
+$catalogue = new MessageCatalogue(?, ?);
 
 ?
-return \$catalogue;
+return $catalogue;
 
-EOF
-                , $locale, $availableCatalogues[$locale]->all(), new PhpLiteral($fallbackContent));
+', $locale, $availableCatalogues[$locale]->all(), new PhpLiteral($fallbackContent));
 
         return '<?php' . "\n\n" . $content;
     }
 
     /**
-     * @return \Symfony\Component\Translation\MessageCatalogueInterface
+     * @return MessageCatalogueInterface
      */
     protected static function load()
     {

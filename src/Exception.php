@@ -10,13 +10,7 @@
 
 namespace Kdyby\Translation;
 
-interface IUserLocaleResolver
+interface Exception
 {
-
-    /**
-     * @param Translator $translator
-     * @return string|NULL
-     */
-    public function resolve(Translator $translator);
-
+    
 }

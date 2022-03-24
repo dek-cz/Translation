@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 /**
  * Test: Kdyby\Translation\TranslateMacros.
@@ -9,43 +9,45 @@
 namespace KdybyTests\Translation;
 
 use Kdyby\Translation\Phrase;
+use Kdyby\Translation\Translator;
 use Monolog\Handler\TestHandler;
 use Monolog\Logger;
 use Nette\Application\UI\ITemplateFactory;
+use Nette\Bridges\ApplicationLatte\Template;
 use Nette\Localization\ITranslator;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-class TranslateMacrosTest extends \KdybyTests\Translation\TestCase
+class TranslateMacrosTest extends TestCase
 {
 
-	/** @var \Kdyby\Translation\Translator */
-	private $translator;
+    /** @var Translator */
+    private $translator;
 
-	/** @var \Nette\Bridges\ApplicationLatte\Template */
-	private $template;
+    /** @var Template */
+    private $template;
 
-	protected function setUp()
-	{
-		parent::setUp();
+    protected function setUp()
+    {
+        parent::setUp();
 
-		$container = $this->createContainer();
+        $container = $this->createContainer();
 
-		/** @var \Kdyby\Translation\Translator $translator */
-		$this->translator = $container->getByType(ITranslator::class);
-		$this->translator->setFallbackLocales(['cs_CZ', 'cs']);
-		$this->translator->setLocale('cs');
+        /** @var Translator $translator */
+        $this->translator = $container->getByType(ITranslator::class);
+        $this->translator->setFallbackLocales(['cs_CZ', 'cs']);
+        $this->translator->setLocale('cs');
 
-		$this->template = $container->getByType(ITemplateFactory::class)
-			->createTemplate(new ControlMock());
-	}
+        $this->template = $container->getByType(ITemplateFactory::class)
+            ->createTemplate(new ControlMock());
+    }
 
-	public function testRenderTranslate()
-	{
-		$this->template->setFile(__DIR__ . '/data/files/Homepage.default.latte');
+    public function testRenderTranslate()
+    {
+        $this->template->setFile(__DIR__ . '/data/files/Homepage.default.latte');
 
-		Assert::same('Ahoj %name%
+        Assert::same('Ahoj %name%
 Ahoj Peter
 Ahoj Peter
 
@@ -64,13 +66,13 @@ Hello Peter|Helloes Peter
 front.missingKey.namedHelloCounting
 front.missingKey.namedHelloCounting
 front.missingKey.namedHelloCounting' . "\n", $this->template->__toString());
-	}
+    }
 
-	public function testRenderTranslateNoescape()
-	{
-		$this->template->setFile(__DIR__ . '/data/files/Article.noescape.latte');
+    public function testRenderTranslateNoescape()
+    {
+        $this->template->setFile(__DIR__ . '/data/files/Article.noescape.latte');
 
-		Assert::same('Ahoj &lt;b&gt;%name%&lt;/b&gt;
+        Assert::same('Ahoj &lt;b&gt;%name%&lt;/b&gt;
 Ahoj &lt;b&gt;Peter&lt;/b&gt;
 Ahoj &lt;b&gt;Peter&lt;/b&gt;
 
@@ -111,13 +113,13 @@ Hello <i>Peter</i>|Helloes <i>Peter</i>
 front.missingKey.namedHelloCounting
 front.missingKey.namedHelloCounting
 front.missingKey.namedHelloCounting' . "\n", $this->template->__toString());
-	}
+    }
 
-	public function testRenderTranslatePrefixed()
-	{
-		$this->template->setFile(__DIR__ . '/data/files/Order.default.latte');
+    public function testRenderTranslatePrefixed()
+    {
+        $this->template->setFile(__DIR__ . '/data/files/Order.default.latte');
 
-		Assert::match('
+        Assert::match('
 Ahoj %name%
 Ahoj Peter
 Ahoj Peter
@@ -140,43 +142,43 @@ Hello Peter|Helloes Peter
 front.missingKey.namedHelloCounting
 front.missingKey.namedHelloCounting
 front.missingKey.namedHelloCounting' . "\n", $this->template->__toString());
-	}
+    }
 
-	public function testPhraseInFlashMessage()
-	{
-		$logger = new Logger('translator');
-		$handler = new TestHandler();
-		$logger->pushHandler($handler);
-		$this->translator->injectPsrLogger($logger);
+    public function testPhraseInFlashMessage()
+    {
+        $logger = new Logger('translator');
+        $handler = new TestHandler();
+        $logger->pushHandler($handler);
+        $this->translator->injectPsrLogger($logger);
 
-		$this->template->setFile(__DIR__ . '/data/files/flashMessage.latte');
-		$this->template->setParameters([
-			'flashes' => unserialize(serialize([
-				(object) [
-					'message' => new Phrase('front.flashes.weSentPasswordRequest', ['email' => 'filip@prochazka.su']),
-					'type' => 'info',
-				],
-				(object) [
-					'message' => new Phrase('front.weSentPasswordRequest', ['email' => 'filip@prochazka.su']),
-					'type' => 'info',
-				],
-			])),
-		]);
+        $this->template->setFile(__DIR__ . '/data/files/flashMessage.latte');
+        $this->template->setParameters([
+            'flashes' => unserialize(serialize([
+                (object) [
+                    'message' => new Phrase('front.flashes.weSentPasswordRequest', ['email' => 'filip@prochazka.su']),
+                    'type' => 'info',
+                ],
+                (object) [
+                    'message' => new Phrase('front.weSentPasswordRequest', ['email' => 'filip@prochazka.su']),
+                    'type' => 'info',
+                ],
+            ])),
+        ]);
 
-		$expected = "\tHeslo vám bylo zasláno na email filip@prochazka.su\n" .
-			"\tHeslo vám pošleme na email filip@prochazka.su\n\n";
+        $expected = "\tHeslo vám bylo zasláno na email filip@prochazka.su\n" .
+            "\tHeslo vám pošleme na email filip@prochazka.su\n\n";
 
-		Assert::match($expected, $this->template->__toString());
+        Assert::match($expected, $this->template->__toString());
 
-		Assert::same([], $handler->getRecords());
-	}
+        Assert::same([], $handler->getRecords());
+    }
 
-	public function testPairMacro()
-	{
-		$this->template->setFile(__DIR__ . '/data/files/pairMacro.latte');
-		$expected = 'Hello';
-		Assert::match($expected, $this->template->__toString());
-	}
+    public function testPairMacro()
+    {
+        $this->template->setFile(__DIR__ . '/data/files/pairMacro.latte');
+        $expected = 'Hello';
+        Assert::match($expected, $this->template->__toString());
+    }
 
 }
 
