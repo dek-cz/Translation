@@ -11,7 +11,6 @@
 namespace Kdyby\Translation\DI;
 
 use Closure;
-use Contributte\Console\DI\ConsoleExtension;
 use Kdyby\Translation\Caching\PhpFileStorage;
 use Kdyby\Translation\CatalogueCompiler;
 use Kdyby\Translation\CatalogueFactory;
@@ -471,20 +470,6 @@ class TranslationExtension extends CompilerExtension
         if (class_exists(Debugger::class)) {
             $initialize->addBody('?::registerBluescreen();', [new PhpLiteral(Panel::class)]);
         }
-    }
-
-    /**
-     * @return bool
-     */
-    private function isRegisteredConsoleExtension(): bool
-    {
-        foreach ($this->compiler->getExtensions() as $extension) {
-            if ($extension instanceof ConsoleExtension) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

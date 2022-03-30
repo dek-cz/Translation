@@ -36,6 +36,7 @@ class LatteExtractor implements ExtractorInterface
         /** @var string|array<string> $dic*/
         $dic = is_string($directory) ? $directory : ($directory instanceof Traversable ? iterator_to_array($directory) : (array) $directory);
         foreach (Finder::findFiles('*.latte', '*.phtml')->from($dic) as $file) {
+            /** @var SplFileInfo $file */
             $this->extractFile($file, $catalogue);
         }
     }
