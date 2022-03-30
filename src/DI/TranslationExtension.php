@@ -15,7 +15,6 @@ use Contributte\Console\DI\ConsoleExtension;
 use Kdyby\Translation\Caching\PhpFileStorage;
 use Kdyby\Translation\CatalogueCompiler;
 use Kdyby\Translation\CatalogueFactory;
-use Kdyby\Translation\Console\ExtractCommand;
 use Kdyby\Translation\Diagnostics\Panel;
 use Kdyby\Translation\FallbackResolver;
 use Kdyby\Translation\InvalidResourceException;
@@ -194,10 +193,6 @@ class TranslationExtension extends CompilerExtension
         /** @var array<string> $cloaders * */
         $cloaders = $config['loaders'] ?: array_keys($loaders);
         $this->loadLoaders($loaders, $cloaders);
-
-        if ($this->isRegisteredConsoleExtension()) {
-            $this->loadConsole($config);
-        }
     }
 
     /**
@@ -247,20 +242,6 @@ class TranslationExtension extends CompilerExtension
         }
     }
 
-    /**
-     * @param array<string, (array<string>|Statement|string)> $config
-     */
-    protected function loadConsole(array $config): void
-    {
-        /** @var array<string> $cdir */
-        $cdir = $config['dirs'];
-        $builder = $this->getContainerBuilder();
-        Validators::assertField($config, 'dirs', 'list');
-        $builder->addDefinition($this->prefix('console.extract'))
-            ->setFactory(ExtractCommand::class)
-            ->addSetup('$defaultOutputDir', [reset($cdir)])
-            ->addTag(ConsoleExtension::COMMAND_TAG, 'latte');
-    }
 
     protected function loadDumpers(): void
     {
