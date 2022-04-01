@@ -14,6 +14,13 @@
     </rule>
     <!-- netbeans problem format -->
     <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
+        <!-- Ignore whitespace requirements for lines occurring before declare(strict_types=1).
+        In general, we have two lines before this statement, one before the
+        file header comment and one after. The sniff does not count any
+        newlines from the comment block. However, in tests, we don't use
+        file header comments, so we have only one line before this
+        statement. This causes problems, so we just ignore this error. -->
+        <exclude name="SlevomatCodingStandard.TypeHints.DeclareStrictTypes.IncorrectWhitespaceBeforeDeclare"/>
         <properties>
             <property name="newlinesCountBetweenOpenTagAndDeclare" value="2"/>
             <property name="spacesCountAroundEqualsSign" value="1"/>
