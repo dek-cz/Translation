@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -33,7 +34,7 @@ class LatteExtractor implements ExtractorInterface
      */
     public function extract($directory, MessageCatalogue $catalogue): void
     {
-        /** @var string|array<string> $dic*/
+        /** @var string|array<string> $dic */
         $dic = is_string($directory) ? $directory : ($directory instanceof Traversable ? iterator_to_array($directory) : (array) $directory);
         foreach (Finder::findFiles('*.latte', '*.phtml')->from($dic) as $file) {
             /** @var SplFileInfo $file */

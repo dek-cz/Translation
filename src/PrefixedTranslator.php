@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -33,12 +34,7 @@ class PrefixedTranslator implements ITranslator
     final public function __construct($prefix, ITranslator $translator)
     {
         if (!$translator instanceof Translator && !$translator instanceof PrefixedTranslator) {
-            throw new InvalidArgumentException(sprintf(
-                'The given translator must be instance of %s or %s, bug %s was given',
-                Translator::class,
-                self::class,
-                get_class($translator)
-            ));
+            throw new InvalidArgumentException(sprintf('The given translator must be instance of %s or %s, bug %s was given', Translator::class, self::class, get_class($translator)));
         }
 
         if ($translator instanceof PrefixedTranslator) {

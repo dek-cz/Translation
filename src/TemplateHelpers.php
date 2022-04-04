@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types = 1);
 
 /**
@@ -96,6 +95,5 @@ class TemplateHelpers
     {
         return $this->translate($message, $count, $parameters, $domain, $locale);
     }
-
 
 }

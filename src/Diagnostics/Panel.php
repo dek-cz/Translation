@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -375,10 +376,7 @@ class Panel implements IBarPanel
     private static function editorLink(string $file, int $line, ?string $text = null): Html|string
     {
         if (Debugger::$editor && is_file($file) && $text !== null) {
-            return Html::el('a')
-                ->href(strtr(Debugger::$editor, ['%file' => rawurlencode($file), '%line' => $line]))
-                ->setAttribute('title', sprintf('%s:%s', $file, $line))
-                ->setHtml($text);
+            return Html::el('a')->href(strtr(Debugger::$editor, ['%file' => rawurlencode($file), '%line' => $line]))->setAttribute('title', sprintf('%s:%s', $file, $line))->setHtml($text);
         } else {
             return Helpers::editorLink($file, $line);
         }

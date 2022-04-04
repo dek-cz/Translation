@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -141,11 +142,7 @@ class Translator extends \Symfony\Component\Translation\Translator implements IT
 
         if (Strings::startsWith($message, '//')) {
             if ($domain !== null) {
-                throw new InvalidArgumentException(sprintf(
-                    'Providing domain "%s" while also having the message "%s" absolute is not supported',
-                    (is_array($domain) ? reset($domain) : $domain),
-                    $message
-                ));
+                throw new InvalidArgumentException(sprintf('Providing domain "%s" while also having the message "%s" absolute is not supported', (is_array($domain) ? reset($domain) : $domain), $message));
             }
 
             $message = Strings::substring($message, 2);

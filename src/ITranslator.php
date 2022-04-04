@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 
 /**
  * This file is part of the Kdyby (http://www.kdyby.org)
@@ -15,6 +16,8 @@ namespace Kdyby\Translation;
  */
 interface ITranslator extends \Nette\Localization\ITranslator
 {
+
+    public const JUNK = '';
 
     // function translate($message, ...$parameters);
 
