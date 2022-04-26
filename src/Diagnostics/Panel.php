@@ -17,11 +17,11 @@ use Kdyby\Translation\IUserLocaleResolver;
 use Kdyby\Translation\Translator;
 use Nette\Application\Application;
 use Nette\Application\Request;
-use Nette\Reflection\ClassType;
 use Nette\SmartObject;
 use Nette\Utils\Arrays;
 use Nette\Utils\Html;
 use Nette\Utils\Strings;
+use ReflectionClass;
 use Symfony\Component\Translation\Loader\YamlFileLoader;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Throwable;
@@ -285,7 +285,9 @@ class Panel implements IBarPanel
     {
         $this->localeResolvers = [];
         foreach ($resolvers as $resolver) {
-            $this->localeResolvers[ClassType::from($resolver)->getShortName()] = $resolver;
+            /** @var IUserLocaleResolver $resolver */
+            $refl = new ReflectionClass($resolver);
+            $this->localeResolvers[$refl->getShortName()] = $resolver;
         }
     }
 

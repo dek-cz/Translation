@@ -40,12 +40,12 @@ use Nette\DI\Definitions\Statement;
 use Nette\DI\Helpers;
 use Nette\PhpGenerator\ClassType as ClassTypeGenerator;
 use Nette\PhpGenerator\PhpLiteral;
-use Nette\Reflection\ClassType as ReflectionClassType;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
 use Nette\SmartObject;
 use Nette\Utils\Finder;
 use Nette\Utils\Validators;
+use ReflectionClass;
 use ReflectionException;
 use SplFileInfo;
 use Symfony\Component\Translation\Extractor\ChainExtractor;
@@ -443,7 +443,9 @@ class TranslationExtension extends CompilerExtension
         try {
             /** @var ServiceDefinition $def */
             $def = $builder->getDefinition((string) $this->loaders[$format]);
-            $refl = ReflectionClassType::from($def->getEntity() ?: $def->getClass());
+            /** @var class-string $className */
+            $className = ($def->getEntity() ?: $def->getClass());
+            $refl = new ReflectionClass($className);
             $method = $refl->getConstructor();
             if ($method !== null && $method->getNumberOfRequiredParameters() > 1) {
                 return;

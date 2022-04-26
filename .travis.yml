@@ -8,7 +8,7 @@ cache:
 
 php:
   - 8.0
-
+  - 8.1
 env:
   - DEV=1
   - COMPOSER_EXTRA_ARGS="--prefer-stable"
@@ -19,10 +19,16 @@ matrix:
       env: COMPOSER_EXTRA_ARGS="--prefer-stable" COVERAGE="--coverage ./coverage.xml --coverage-src ./src" TESTER_RUNTIME="phpdbg"
     - php: 8.0
       env: COMPOSER_EXTRA_ARGS="--prefer-stable" PHPSTAN=1
-    - php: 8.0
+    - php: 8.1
+      env: COMPOSER_EXTRA_ARGS="--prefer-stable" COVERAGE="--coverage ./coverage.xml --coverage-src ./src" TESTER_RUNTIME="phpdbg"
+    - php: 8.1
+      env: COMPOSER_EXTRA_ARGS="--prefer-stable" PHPSTAN=1
+    - php: 8.1
       env: COMPOSER_EXTRA_ARGS="--prefer-stable" CODING_STANDARD=1
   exclude:
     - php: 8.0
+      env: COMPOSER_EXTRA_ARGS="--prefer-stable"
+    - php: 8.1
       env: COMPOSER_EXTRA_ARGS="--prefer-stable"
   allow_failures:
     - env: DEV=1
