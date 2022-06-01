@@ -55,7 +55,7 @@ class PhpFileStorage extends FileStorage implements IStorage
         $cacheKey = substr_replace(
             $key,
             trim(strtr($this->hint, '\\/@', '.._'), '.') . '-',
-            strpos($key, (defined("Nette\Caching\Cache::NAMESPACE_SEPARATOR") ? Cache::NAMESPACE_SEPARATOR : Cache::NamespaceSeparator)) + 1,
+            strpos($key, (defined('Nette\Caching\Cache::NAMESPACE_SEPARATOR') ? Cache::NAMESPACE_SEPARATOR : Cache::NamespaceSeparator)) + 1,
             0
         );
 
