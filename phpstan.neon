@@ -1,7 +1,10 @@
 includes:
-	- vendor/phpstan/phpstan-nette/extension.neon
-	- vendor/phpstan/phpstan-nette/rules.neon
+    - vendor/phpstan/phpstan-nette/extension.neon
+    - vendor/phpstan/phpstan-nette/rules.neon
 
 parameters:
-	ignoreErrors:
-		
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+            - '#Access to undefined constant [a-zA-Z0-9\\_]+::NAMESPACE_SEPARATOR.#'
+            - '#Access to undefined constant [a-zA-Z0-9\\_]+::NamespaceSeparator.#'
+            - '#Constant TEMP_DIR not found#'
