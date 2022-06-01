@@ -4,4 +4,4 @@ includes:
 
 parameters:
 	ignoreErrors:
-		- '#Constant TEMP_DIR not found#'
+		
