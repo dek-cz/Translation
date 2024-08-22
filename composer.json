@@ -21,7 +21,6 @@
         "latte/latte": "^3.0",
         "nette/caching": "^3.0",
         "nette/di": "^3.1",
-        "nette/finder": "^2.5",
         "nette/http": "^3.0",
         "nette/neon": "^3.0",
         "nette/php-generator": "^4.0",
