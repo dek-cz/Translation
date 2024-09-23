@@ -17,8 +17,8 @@
         "issues": "https://github.com/dek-cz/translation/issues"
     },
     "require": {
-        "php": ">=8.0",
-        "latte/latte": "^2.9.3",
+        "php": ">=8.3",
+        "latte/latte": "^3.0",
         "nette/caching": "^3.0",
         "nette/di": "^3.0",
         "nette/finder": "^2.5",

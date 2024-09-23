@@ -20,6 +20,7 @@ use Kdyby\Translation\FallbackResolver;
 use Kdyby\Translation\InvalidResourceException;
 use Kdyby\Translation\IUserLocaleResolver;
 use Kdyby\Translation\Latte\TranslateMacros;
+use Kdyby\Translation\Latte\TranslateExtension;
 use Kdyby\Translation\LocaleResolver\AcceptHeaderResolver;
 use Kdyby\Translation\LocaleResolver\ChainResolver;
 use Kdyby\Translation\LocaleResolver\LocaleParamResolver;
@@ -73,11 +74,17 @@ class TranslationExtension extends CompilerExtension
 
     /** @deprecated */
     public const EXTRACTOR_TAG = self::TAG_EXTRACTOR;
+
     public const TAG_LOADER = 'translation.loader';
+
     public const TAG_DUMPER = 'translation.dumper';
+
     public const TAG_EXTRACTOR = 'translation.extractor';
+
     public const RESOLVER_REQUEST = 'request';
+
     public const RESOLVER_HEADER = 'header';
+
     public const RESOLVER_SESSION = 'session';
 
     /** @var mixed[] */
@@ -289,13 +296,15 @@ class TranslationExtension extends CompilerExtension
         /** @var array<string, array<string>|string> $config */
         $config = $this->config;
 
-        $registerToLatte = function (FactoryDefinition $def) {
-            $def->getResultDefinition()->addSetup('?->onCompile[] = function($engine) { ?::install($engine->getCompiler()); }', ['@self', new PhpLiteral(TranslateMacros::class)]);
 
+        $registerToLatte = function (FactoryDefinition $def) {
+            $def->getResultDefinition()
+                ->addSetup('addExtension', [new TranslateExtension]);
             $def->getResultDefinition()
                 ->addSetup('addProvider', ['translator', $this->prefix('@default')])
                 ->addSetup('addFilter', ['translate', [$this->prefix('@helpers'), 'translateFilterAware']]);
         };
+
 
         $latteFactoryService = $builder->getByType(LatteFactory::class) ?: $builder->getByType(ILatteFactory::class);
         if (!$latteFactoryService || !self::isOfType($builder->getDefinition($latteFactoryService)->getClass(), LatteEngine::class)) {
